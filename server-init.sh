@@ -1,17 +1,5 @@
 sudo apt-get update
 
-# couchdb
-which_couchdb=`which couchdb`
-if [ ! -z "$which_couchdb" ]; then
-  echo "CouchDB already installed"
-else
-  sudo apt-get install python-software-properties
-  sudo apt-add-repository ppa:couchdb/stable
-  sudo apt-get update
-  sudo apt-get install couchdb couchdb-bin couchdb-common -y
-  sudo service couchdb start
-fi
-
 # curl
 which_curl=`which curl`
 if [ ! -z "$which_curl" ]; then
