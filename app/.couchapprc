@@ -1,0 +1,8 @@
+  {
+  "comment" : "COPY THIS FILE to .couchapprc and fill in the details below",
+  "env" : {
+    "default" : {
+      "db" : "http://$T_ADMIN:$T_PASS@localhost/db/tangerine"
+    }
+  }
+}

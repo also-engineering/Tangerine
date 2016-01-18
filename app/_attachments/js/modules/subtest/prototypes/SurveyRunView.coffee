@@ -154,7 +154,7 @@ class SurveyRunView extends Backbone.View
     @questions     = new Questions()
     # @questions.db.view = "questionsBySubtestId" Bring this back when prototypes make sense again
     @questions.fetch
-      key: @model.get("assessmentId")
+      key: "q" + @model.get("assessmentId")
       success: (collection) =>
         @questions = new Questions collection.where {"subtestId":@model.id} 
         @questions.sort()
@@ -339,10 +339,7 @@ class SurveyRunView extends Backbone.View
         @updateProgressButtons()
 
     if @questions.length == notAskedCount
-      if Tangerine.settings.get("context") != "class"
-        @parent.next?()
-      else
-        @$el.append "<p class='grey'>#{@text.notEnough}</p>"
+      @parent.next?()
 
     @trigger "rendered"
 

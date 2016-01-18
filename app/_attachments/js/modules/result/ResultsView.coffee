@@ -24,7 +24,7 @@ class ResultsView extends Backbone.View
     $details = @$el.find("#details_#{targetId}")
     if not _.isEmpty($details.html())
       $details.empty()
-      return 
+      return
 
     result = new Result "_id" : targetId
     result.fetch
@@ -35,7 +35,7 @@ class ResultsView extends Backbone.View
         view.render()
         $details.html "<div class='info_box'>" + $(view.el).html() + "</div>"
         view.close()
-        
+
 
 
   cloud: ->
@@ -74,12 +74,12 @@ class ResultsView extends Backbone.View
     return false
 
   initDetectOptions: ->
-    @available = 
-      cloud : 
+    @available =
+      cloud :
         ok : false
         checked : false
       tablets :
-        ips : [] 
+        ips : []
         okCount  : 0
         checked  : 0
         total : 256
@@ -88,7 +88,7 @@ class ResultsView extends Backbone.View
     $("button.cloud, button.tablets").attr("disabled", "disabled")
     @detectCloud()
     @detectTablets()
-    
+
   detectCloud: ->
     # Detect Cloud
     $.ajax
@@ -126,7 +126,7 @@ class ResultsView extends Backbone.View
       message = "#{percentage}%"
     tabletMessage = "Searching for tablets: #{message}"
 
-    @$el.find(".checking_status").html "#{tabletMessage}" if @available.tablets.checked > 0 
+    @$el.find(".checking_status").html "#{tabletMessage}" if @available.tablets.checked > 0
 
     if @available.cloud.checked && @available.tablets.checked == @available.tablets.total
       @$el.find(".status .info_box").html "Done detecting options"
@@ -160,10 +160,6 @@ class ResultsView extends Backbone.View
 
     @i18n()
 
-    if Tangerine.settings.get("context") == "mobile"
-      document.removeEventListener "backbutton", Tangerine.onBackButton, false
-      document.addEventListener "backbutton", Tangerine.onBackButton, false
-
     @resultLimit  = 100
     @resultOffset = 0
 
@@ -180,25 +176,13 @@ class ResultsView extends Backbone.View
 
     @clearSubViews()
 
-    cloudButton  = "
-      <button class='cloud command' disabled='disabled'>#{@text.cloud}</button>
-    " if Tangerine.settings.get("context") is "mobile"
-
-    tabletButton = "
-      <button class='tablets command' disabled='disabled'>#{@text.tablets}</button>
-    " if Tangerine.settings.get("context") is "mobile"
-
-    csvButton    = "
-      <a href='/_csv/assessment/#{Tangerine.db_name}/#{@assessment.id}'><button class='csv command'>#{@text.csv}</button></a>
-    " if Tangerine.settings.get('context') is "server"
-
     html = "
       <h1>#{@assessment.getEscapedString('name')} #{@text.results}</h1>
       <h2>#{@text.saveOptions}</h2>
       <div class='menu_box'>
-        #{cloudButton || ''}
-        #{tabletButton || ''}
-        #{csvButton || ''}
+
+        <a href='/brockman/assessment/#{Tangerine.db_name}/#{@assessment.id}'><button class='csv command'>#{@text.csv}</button></a>
+
         <!--div class='small_grey clickable show_advanced'>#{@text.advanced}</div-->
         <div id='advanced' class='confirmation'>
           <div class='menu_box'>
@@ -217,16 +201,6 @@ class ResultsView extends Backbone.View
       </div>
     "
 
-    if Tangerine.settings.get("context") == "mobile"
-      html += "
-        <button class='detect command'>#{@text.detect}</button>
-        <div class='status'>
-          <h2>#{@text.status}</h2>
-          <div class='info_box'></div>
-          <div class='checking_status'></div>
-
-        </div>
-        "
     html += "
       <h2 id='results_header'>#{@text.results} (<span id='result_position'>loading...</span>)</h2>
       <div class='confirmation' id='controls'>
@@ -237,7 +211,7 @@ class ResultsView extends Backbone.View
       <br>
       <button class='command refresh'>#{@text.refresh}</button>
     "
-    
+
     @$el.html html
 
     @updateResults()
@@ -255,7 +229,7 @@ class ResultsView extends Backbone.View
     # @resultOffset
     # @resultLimit
 
-    val           = parseInt($("#page").val()) || 1 
+    val           = parseInt($("#page").val()) || 1
     calculated    = (val - 1) * @resultLimit
     maxPage       = Math.floor(@results.length / @resultLimit )
     @resultOffset = Math.limit(0, calculated, maxPage * @resultLimit) # default page 1 == 0_offset
@@ -267,14 +241,8 @@ class ResultsView extends Backbone.View
       @$el.find('#results_header').html @text.noResults
       return
 
-    location =
-      if Tangerine.settings.get("context") == "server"
-        "group"
-      else if Tangerine.settings.get("context") == "mobile"
-        "local"
-
-    $.ajax 
-      url: Tangerine.settings.urlView(location, "resultSummaryByAssessmentId")+"?descending=true&limit=#{@resultLimit}&skip=#{@resultOffset}"
+    $.ajax
+      url: Tangerine.settings.urlView('group', "resultSummaryByAssessmentId")+"?descending=true&limit=#{@resultLimit}&skip=#{@resultOffset}"
       type: "POST"
       dataType: "json"
       contentType: "application/json"
@@ -287,7 +255,7 @@ class ResultsView extends Backbone.View
         count = rows.length
 
         maxResults  = 100
-        currentPage = Math.floor( @resultOffset / @resultLimit ) + 1 
+        currentPage = Math.floor( @resultOffset / @resultLimit ) + 1
 
         if @results.length > maxResults
           @$el.find("#controls").removeClass("confirmation")
@@ -302,7 +270,7 @@ class ResultsView extends Backbone.View
 
         htmlRows = ""
         for row in rows
-          
+
           id      = row.value?.participant_id || "No ID"
           endTime = row.value.end_time
           if endTime?
@@ -326,11 +294,11 @@ class ResultsView extends Backbone.View
         @$el.find("#results_container").html htmlRows
 
         @$el.find(focus).focus()
-  
+
   afterRender: =>
     for view in @subViews
       view.afterRender?()
-      
+
   clearSubViews:->
     for view in @subViews
       view.close()

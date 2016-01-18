@@ -52,7 +52,7 @@ class AssessmentsMenuView extends Backbone.View
     updatedAttributes            = {}
     updatedAttributes[attribute] = value
 
-    Tangerine.settings.save updatedAttributes, 
+    Tangerine.settings.save updatedAttributes,
       success: =>
         @alreadySaving = false
         Utils.topAlert("Saved")
@@ -71,16 +71,16 @@ class AssessmentsMenuView extends Backbone.View
       success: (data) ->
         a = document.createElement("a")
         a.href = Tangerine.settings.config.get("tree")
-        Utils.sticky("<h1>APK link</h1><p>#{a.host}/apk/#{data.token}</p>")
+        Utils.sticky("<h1>APK link</h1><p>#{a.host}/tree/#{data.token}</p>")
       error: (xhr, response) ->
-        Utils.sticky response.error
+        Utils.sticky response.message
 
   gotoGroups: -> Tangerine.router.navigate "groups", true
 
   import:     -> Tangerine.router.navigate "import", true
 
   i18n: ->
-    @text = 
+    @text =
       "new"            : t("AssessmentMenuView.button.new")
       import           : t("AssessmentMenuView.button.import")
       apk              : t("AssessmentMenuView.button.apk")
@@ -99,15 +99,7 @@ class AssessmentsMenuView extends Backbone.View
 
     @i18n()
 
-    if Tangerine.settings.get("context") == "mobile"
-      @tabletManager = new TabletManagerView
-        docTypes : ["result"]
-        callbacks: 
-          completePull: => @tabletManager.pushDocs()
-
     @[key] = value for key, value of options
-      
-
 
     @assessments.each (assessment) => assessment.on "new", @addAssessment
     @curricula.each   (curriculum) => curriculum.on "new", @addCurriculum
@@ -123,9 +115,9 @@ class AssessmentsMenuView extends Backbone.View
 
 
   render: =>
-    
+
     isAdmin = Tangerine.user.isAdmin()
-    
+
     newButton     = "<button class='new command'>#{@text.new}</button>"
     importButton  = "<button class='import command'>#{@text.import}</button>"
     apkButton     = "<button class='apk navigation'>#{@text.apk}</button>"
@@ -138,32 +130,25 @@ class AssessmentsMenuView extends Backbone.View
 
     containers = []
     containers.push "<section id='curricula_container' class='CurriculaListView'></section>" if @curricula.length isnt 0
-    if Tangerine.settings.get("context") is "server"
-      containers.push "<section id='klass_container' class='KlassesView'></section>"         if @klasses.length isnt 0
-      containers.push "<section id='teachers_container' class='TeachersView'></section>"     if @teachers.length isnt 0
-      containers.push "<section id='users_menu_container' class='UsersMenuView'></section>"
+    containers.push "<section id='klass_container' class='KlassesView'></section>"         if @klasses.length isnt 0
+    containers.push "<section id='teachers_container' class='TeachersView'></section>"     if @teachers.length isnt 0
+    containers.push "<section id='users_menu_container' class='UsersMenuView'></section>"
 
 
 
     html = "
-      #{Tangerine.settings.contextualize(
-        server : "
-          #{groupsButton}
-          #{apkButton}
-          #{resultsButton} 
-          #{groupHandle}
-          "
-        ) }
+      #{groupsButton}
+      #{apkButton}
+      #{resultsButton}
+      #{groupHandle}
       <section>
         <h1>#{@text.assessments}</h1>
     "
 
     if isAdmin
       html += "
-          #{if Tangerine.settings.get("context") == "server" then newButton else "" }
+          #{newButton}
           #{importButton}
-
-          
 
           <div class='new_form confirmation'>
             <div class='menu_box'>
@@ -180,17 +165,11 @@ class AssessmentsMenuView extends Backbone.View
 
         #{containers.join('')}
 
-        #{if Tangerine.settings.get("context") == "mobile" then syncTabletsButton else "" }
-        #{if Tangerine.settings.get("context") == "mobile" then uploadButton else "" }
-
       "
     else
       html += "
         <div id='assessments_container'></div>
       </section>
-        <br>
-        #{if Tangerine.settings.get("context") == "mobile" then syncTabletsButton else "" }
-        #{if Tangerine.settings.get("context") == "mobile" then uploadButton else "" }
       "
 
     @$el.html html
@@ -201,31 +180,30 @@ class AssessmentsMenuView extends Backbone.View
     @curriculaListView.setElement( @$el.find("#curricula_container") )
     @curriculaListView.render()
 
-    if Tangerine.settings.get("context") == "server"
-      @usersMenuView.setElement( @$el.find("#users_menu_container") )
-      @usersMenuView.render()
+    @usersMenuView.setElement( @$el.find("#users_menu_container") )
+    @usersMenuView.render()
 
-      if @klasses.length > 0
-        @klassesView = new KlassesView
-          klasses : @klasses
-          curricula : @curricula
-          teachers : @teachers
-        @klassesView.setElement @$el.find("#klass_container")
-        @klassesView.render()
-      else
-        @$el.find("#klass_container").remove()
+    if @klasses.length > 0
+      @klassesView = new KlassesView
+        klasses : @klasses
+        curricula : @curricula
+        teachers : @teachers
+      @klassesView.setElement @$el.find("#klass_container")
+      @klassesView.render()
+    else
+      @$el.find("#klass_container").remove()
 
 
-      if @teachers.length > 0
-        @teachersView = new TeachersView
-          teachers : @teachers
-          users : @users
-        @teachersView.setElement @$el.find("#teachers_container")
-        @teachersView.render()
-      else
-        @$el.find("#teachers_container").remove()
+    if @teachers.length > 0
+      @teachersView = new TeachersView
+        teachers : @teachers
+        users : @users
+      @teachersView.setElement @$el.find("#teachers_container")
+      @teachersView.render()
+    else
+      @$el.find("#teachers_container").remove()
 
-    
+
 
     @trigger "rendered"
 
@@ -277,7 +255,7 @@ class AssessmentsMenuView extends Backbone.View
       callback = @addCurriculum
 
     newObject.save null,
-      success : => 
+      success : =>
         callback(newObject)
         @$el.find('.new_form, .new').toggle()
         @$el.find('.new_name').val ""

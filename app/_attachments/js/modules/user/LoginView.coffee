@@ -2,7 +2,7 @@ class LoginView extends Backbone.View
 
   className: 'LoginView'
 
-  events: 
+  events:
     if Modernizr.touch
       'keypress input'     : 'keyHandler'
       'change input'       : 'onInputChange'
@@ -48,9 +48,6 @@ class LoginView extends Backbone.View
     $target = $(event.target)
     type = $target.attr("type")
     return unless type is 'text' or not type?
-    isServer = Tangerine.settings.get("context") is "server"
-
-    $target.val($target.val().toLowerCase()) unless isServer
 
   showRecent: ->
     @$el.find("#name").autocomplete(
@@ -61,10 +58,6 @@ class LoginView extends Backbone.View
   blurRecent: ->
     @$el.find("#name").autocomplete("close")
     @initAutocomplete()
-
-  initAutocomplete: ->
-    @$el.find("#name").autocomplete
-      source: @users.pluck("name")
 
   recenter: =>
     @$el.middleCenter()
@@ -91,7 +84,7 @@ class LoginView extends Backbone.View
     $target = $(event.target)
     if $target.val() == "*new"
       @updateMode "signup"
-    else 
+    else
       @$el.find("#pass").focus()
 
   goOn: -> Tangerine.router.landing()
@@ -116,15 +109,11 @@ class LoginView extends Backbone.View
 
   render: =>
 
-    nameName = Tangerine.settings.contextualize
-      server    : @text.user
-      satellite : @text.user
-      mobile    : @text.enumerator
-      klass     : @text.teacher
+    nameName =  @text.user
 
     nameName = nameName.titleize()
 
-    serverHtml = "
+    html = "
       <img src='images/tangerine_logo_small.png' id='login_logo'>
       <div id='name_message' class='messages'></div>
       <input type='text' id='name' placeholder='#{nameName}'>
@@ -133,56 +122,13 @@ class LoginView extends Backbone.View
       <button class='login'>#{@text.login}</button>
     "
 
-    tabletHtml = "
-      <img src='images/tangerine_logo_small.png' id='login_logo'>
+    @$el.html html
 
-      <div class='tab_container'>
-        <div class='tab mode selected first' data-mode='login'>#{@text.login_tab}</div><div class='tab mode last' data-mode='signup'>#{@text.sign_up_tab}</div>
-      </div>
-
-      <div class='login'>
-        <section>
-
-          <div class='messages name_message'></div>
-          <table><tr>
-            <td><input id='name' class='tablet-name' placeholder='#{nameName}'></td>
-            <td><img src='images/icon_recent.png' class='recent clickable'></td>
-          </tr></table>
-
-          <div class='messages pass_message'></div>
-          <input id='pass' type='password' placeholder='#{@text.password}'>
-
-          <button class='login'>#{@text.login}</button>
-
-        </section>
-      </div>
-
-      <div class='signup' style='display:none;'>
-        <section>
-
-          <div class='messages name_message'></div>
-          <input id='new_name' class='tablet-name' type='text' placeholder='#{nameName}'>
-
-          <div class='messages pass_message'></div>
-          <input id='new_pass_1' type='password' placeholder='#{@text.password}'>
-
-          <input id='new_pass_2' type='password' placeholder='#{@text.password_confirm}'>
-
-          <button class='sign_up'>#{@text.sign_up}</button>
-        </section>
-      </div>
-    "
-
-    @$el.html Tangerine.settings.contextualize
-      server: serverHtml
-      notServer: tabletHtml
-
-    @initAutocomplete() if Tangerine.settings.get("context") isnt "server"
 
     @nameMsg = @$el.find(".name_message")
     @passMsg = @$el.find(".pass_message")
 
-    @trigger "rendered" 
+    @trigger "rendered"
 
   afterRender: =>
     @recenter()
@@ -198,16 +144,13 @@ class LoginView extends Backbone.View
       TAB       : 9
       BACKSPACE : 8
 
-    isServer = Tangerine.settings.get("context") is "server"
     $('.messages').html('')
     char = event.which
     if char?
-      isSpecial = 
-        char is key.ENTER              or 
-        event.keyCode is key.TAB       or 
+      isSpecial =
+        char is key.ENTER              or
+        event.keyCode is key.TAB       or
         event.keyCode is key.BACKSPACE
-      # Allow upper case here but make it so it's not later
-      return false if not /[a-zA-Z0-9]/.test(String.fromCharCode(char)) and not isSpecial and not isServer
       return @action() if char is key.ENTER
     else
       return true
@@ -240,19 +183,19 @@ class LoginView extends Backbone.View
     @passError(@text.error_pass) if pass == ""
 
     if @errors == 0
-      try 
+      try
         @user.login name, pass
       catch e
         @nameError e
 
     return false
 
-  passError: (error) -> 
+  passError: (error) ->
     @errors++
     @passMsg.html error
     @$el.find("#pass").focus()
 
-  nameError: (error) -> 
+  nameError: (error) ->
     @errors++
     @nameMsg.html error
     @$el.find("#name").focus()

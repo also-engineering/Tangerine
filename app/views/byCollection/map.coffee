@@ -1,1 +1,1 @@
-(doc) -> emit(doc.collection, doc) if doc.collection
+(doc) -> emit(doc.collection, { "r" : doc._rev }) if doc.collection

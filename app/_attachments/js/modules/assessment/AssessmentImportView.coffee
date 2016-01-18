@@ -2,7 +2,7 @@ class AssessmentImportView extends Backbone.View
 
   className: "AssessmentImportView"
 
-  events: 
+  events:
     'click .import' : 'import'
     'click .back'   : 'back'
     'click .verify' : 'verify'
@@ -10,7 +10,7 @@ class AssessmentImportView extends Backbone.View
 
   groupImport: ->
 
-    $.ajax 
+    $.ajax
       url: Tangerine.settings.urlView("local", "byDKey"),
       type: "POST"
       contentType: "application/json"
@@ -22,7 +22,7 @@ class AssessmentImportView extends Backbone.View
           keyList.push datum.key
         keyList = _.uniq(keyList)
 
-        $.ajax 
+        $.ajax
           url: Tangerine.settings.urlView "group", "assessmentsNotArchived"
           dataType: "jsonp"
           success: (data) =>
@@ -38,37 +38,19 @@ class AssessmentImportView extends Backbone.View
 
   initialize: (options) ->
     @noun = options.noun
-    @connectionVerified = false
 
-    if Tangerine.settings.get("context") != "server"
-      @timer = setTimeout @verify, 20 * 1000
-      # Ensure we have access to the group's documents on the server
-      verReq = $.ajax 
-        url: Tangerine.settings.urlView("group", "byDKey")
-        dataType: "jsonp"
-        data: keys: ["testtest"]
-        timeout: 5000
-        success: =>
-          clearTimeout @timer
-          @connectionVerified = true
-          @render()
-
-    else
-      @connectionVerified = true
-      @render()
-
+    @connectionVerified = true
 
     @docsRemaining = 0
-    @serverStatus = "checking..."
-    $.ajax
-      dataType: "jsonp"
-      url: Tangerine.settings.urlHost("group")
-      success: (a, b) =>
-        @serverStatus = "Ok"
-        @updateServerStatus()
-      error: (a, b) =>
-        @serverStatus = "Not available"
-        @updateServerStatus()
+
+    # there was a lot of server connection checking here
+    # can probably get rid of more code / markup on another pass
+
+    @serverStatus = "Ok"
+    @updateServerStatus()
+
+    @render()
+
 
   updateServerStatus: ->
     @$el.find("#server_connection").html @serverStatus
@@ -83,7 +65,7 @@ class AssessmentImportView extends Backbone.View
 
     selectedGroup = @$el.find("select#group option:selected").attr('data-group') || ""
 
-    return Utils.midAlert "Please select a group." if Tangerine.settings.get("context") == "server" && selectedGroup == "NONE"
+    return Utils.midAlert "Please select a group." if selectedGroup == "NONE"
 
     @newAssessment = new Assessment
     @newAssessment.on "status", @updateActivity
@@ -99,7 +81,7 @@ class AssessmentImportView extends Backbone.View
 
   updateFromActiveTasks: =>
     $.couch.activeTasks
-      success: (tasks) => 
+      success: (tasks) =>
         for task in tasks
           if task.type.toLowerCase() == "replication"
             if not _.isEmpty(task.status) then @activity = task.status
@@ -137,22 +119,21 @@ class AssessmentImportView extends Backbone.View
         #{failures || ''}
         #{changes || ''}
       "
-      @updateProgress null, =>
-        Utils.askToLogout() unless Tangerine.settings.get("context") == "server"
+      @updateProgress null
     else if status == "import error"
       clearInterval @activeTaskInterval
       @activity = "Import error: #{message}"
 
     @updateProgress()
 
-  updateProgress: (key, callback={}) =>
+  updateProgress: (key, callback=$.noop) =>
 
     if key?
       if @importList[key]?
         @importList[key]++
       else
         @importList[key] = 1
-  
+
     progressHTML = "<table>"
 
     for key, value of @importList
@@ -165,13 +146,10 @@ class AssessmentImportView extends Backbone.View
 
     @$el.find("#progress").html progressHTML
 
-    callback?()
+    callback()
 
   render: ->
 
-    groupImport = "
-      <button class='command group_import'>Group import</button>
-    " if Tangerine.settings.get("context") != "server"
 
     legacyOption = "<option data-group='IrisCouch'>tangerine.iriscouch.com</option>" if String(window.location.href).indexOf("databases")
 
@@ -181,9 +159,9 @@ class AssessmentImportView extends Backbone.View
         #{legacyOption || ""}
         #{("<option data-group='#{group}'>#{group}</option>" for group in Tangerine.user.getArray('groups')).join('')}
       </select>
-    " if Tangerine.settings.get("context") == "server"
+    "
 
-    if not @connectionVerified 
+    if not @connectionVerified
       importStep = "
         <section>
           <p>Please wait while your connection is verified.</p>
@@ -195,7 +173,7 @@ class AssessmentImportView extends Backbone.View
       importStep = "
         <div class='question'>
           <label for='d_key'>Download keys</label>
-          
+
           <input id='d_key' value=''>
           #{groupSelector || ''}<br>
           <button class='import command'>Import</button> #{groupImport || ""}<br>

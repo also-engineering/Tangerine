@@ -1,14 +1,22 @@
 utils = require("views/lib/utils")
-cell        = utils.cell
-exportValue = utils.exportValue
+cell  = utils.cell
 
-pairsLocation = ( subtest ) ->
+translatedGridValue   = utils.translatedGridValue
+translatedSurveyValue = utils.translatedSurveyValue
+
+cGrid =
+  CORRECT : "C"
+  INCORRECT : "I"
+  MISSING : "M"
+  SKIPPED : "S"
+
+cellsLocation = ( subtest ) ->
   row = []
   for label, i in subtest.data.labels
     row.push cell subtest, label, subtest.data.location[i]
   return row
 
-pairsDatetime = ( subtest, datetimeSuffix ) ->
+cellsDatetime = ( subtest, datetimeSuffix ) ->
   row = []
   months = ["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"]
 
@@ -23,24 +31,13 @@ pairsDatetime = ( subtest, datetimeSuffix ) ->
   row.push cell( subtest, "assess_time#{datetimeSuffix}", subtest.data.time)
   return row
 
-pairsObservation = ( subtest ) ->
-  row = []
-  for observations, i in subtest.data.surveys
-    observationData = observations.data
-    for surveyVariable, surveyValue of observationData
-      if surveyValue is Object(surveyValue) # multiple type question
-        for optionKey, optionValue of surveyValue
-          row.push cell( subtest, "#{surveyVariable}_#{optionKey}_#{i+1}", exportValue(optionValue))
-      else # single type question or open
-        row.push cell( subtest, "#{surveyVariable}_#{i+1}", exportValue(surveyValue))
-  return row
-
-pairsGrid = ( subtest, isClass ) ->
+cellsGrid = ( subtest, isClass ) ->
   row = []
 
   variableName = subtest.data.variable_name
 
-  variableName = subtest.name.toLowerCase().replace(/\s/g, "_") if variableName is ""
+  if variableName is ""
+    variableName = subtest.name.toLowerCase().replace(/\s/g, "_")
 
   row.push cell( subtest, "#{variableName}_auto_stop",                  subtest.data.auto_stop)
   row.push cell( subtest, "#{variableName}_time_remain",                subtest.data.time_remain)
@@ -48,37 +45,33 @@ pairsGrid = ( subtest, isClass ) ->
   row.push cell( subtest, "#{variableName}_item_at_time",               subtest.data.item_at_time)
   row.push cell( subtest, "#{variableName}_time_intermediate_captured", subtest.data.time_intermediate_captured)
 
-  correct = 0
   for item, i in subtest.data.items
-    correct++ if item.itemResult is "correct"
     if isClass == true
       letterLabel = "#{i+1}_#{item.itemLabel}"
     else
       letterLabel = "#{variableName}_#{i+1}"
 
-    row.push cell( subtest, letterLabel, exportValue( item.itemResult ) )
+    row.push cell( subtest, letterLabel, translatedGridValue( item.itemResult ) )
 
-  itemsPerMinute = correct / ( 1 - ( subtest.data.time_remain / subtest.data.time_allowed ) )
+  row.push cell( subtest, "#{variableName}_time_allowed",     subtest.data.time_allowed )
 
-  row.push cell( subtest, "#{variableName}_time_allowed",     exportValue( subtest.data.time_allowed ) )
-  row.push cell( subtest, "#{variableName}_items_per_minute", exportValue( itemsPerMinute ) )
 
 
 
   return row
 
-pairsSurvey = ( subtest ) ->
+cellsSurvey = ( subtest ) ->
   row = []
   for surveyVariable, surveyValue of subtest.data
     if surveyValue is Object(surveyValue) # multiple type question
       for optionKey, optionValue of surveyValue
-        row.push cell( subtest, "#{surveyVariable}_#{optionKey}", exportValue(optionValue))
+        row.push cell( subtest, "#{surveyVariable}_#{optionKey}", translatedSurveyValue(optionValue))
     else # single type question or open
-      row.push cell( subtest, surveyVariable, exportValue(surveyValue)) # if open just show result, otherwise translate not_asked
+      row.push cell( subtest, surveyVariable, translatedSurveyValue(surveyValue)) # if open just show result, otherwise translate not_asked
   return row
 
 
-pairsGps = (subtest) ->
+cellsGps = (subtest) ->
   row = []
   row.push cell( subtest, "latitude",         subtest.data.lat )
   row.push cell( subtest, "longitude",        subtest.data.long )
@@ -90,11 +83,10 @@ pairsGps = (subtest) ->
   row.push cell( subtest, "timestamp",        subtest.data.timestamp )
   return row
 
-if typeof(exports) == "object"
 
-  exports.pairsGrid        = pairsGrid
-  exports.pairsGps         = pairsGps
-  exports.pairsSurvey      = pairsSurvey
-  exports.pairsObservation = pairsObservation
-  exports.pairsDatetime    = pairsDatetime
-  exports.pairsLocation    = pairsLocation
+exports.cellsGrid        = cellsGrid
+exports.cellsGps         = cellsGps
+exports.cellsSurvey      = cellsSurvey
+exports.cellsDatetime    = cellsDatetime
+exports.cellsLocation    = cellsLocation
+

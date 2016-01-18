@@ -2,7 +2,7 @@ class AssessmentSyncView extends Backbone.View
 
   className: "AssessmentSyncView"
 
-  events: 
+  events:
     "click .back" : "goBack"
     "click .show_details" : "showDetails"
     "click .keep" : "keep"
@@ -20,12 +20,12 @@ class AssessmentSyncView extends Backbone.View
 
     @getDocIds ( docIds ) =>
 
-      $.couch.replicate( 
+      $.couch.replicate(
         groupDB, # from
         localDB, # to
           success: (response)=>
-            Utils.midAlert "Download success" 
-            @updateConflicts() 
+            Utils.midAlert "Download success"
+            @updateConflicts()
           error: (a, b)      => Utils.midAlert "Pull Error<br>#{a} #{b}"
         ,
           doc_ids: docIds
@@ -41,12 +41,12 @@ class AssessmentSyncView extends Backbone.View
 
     @getDocIds ( docIds ) =>
 
-      $.couch.replicate( 
+      $.couch.replicate(
         localDB, # from
         groupDB, # to
-          success: (response)=> 
+          success: (response)=>
             Utils.midAlert "Upload success"
-            @updateConflicts() 
+            @updateConflicts()
           error: (a, b)      => Utils.midAlert "Pull Error<br>#{a} #{b}"
         ,
           doc_ids: docIds
@@ -65,7 +65,7 @@ class AssessmentSyncView extends Backbone.View
       type: "GET"
       dataType: "jsonp"
       data: keys: JSON.stringify([@dKey])
-      error: (a, b) => Utils.midAlert "Pull error<br>#{a} #{b}" 
+      error: (a, b) => Utils.midAlert "Pull error<br>#{a} #{b}"
       success: (data) =>
         docList = []
         for datum in data.rows
@@ -132,7 +132,7 @@ class AssessmentSyncView extends Backbone.View
       @updateConflicts() if @deletedCount == @toDeleteCount
 
     for doc in docsById[docId]
-      @toDeleteCount++ unless doc._rev == docRev 
+      @toDeleteCount++ unless doc._rev == docRev
 
     for doc in docsById[docId]
 
@@ -186,7 +186,7 @@ class AssessmentSyncView extends Backbone.View
         Server connection<br>
         <span id='connection'>#{@loginButton({status:"Checking..."})}</span>
       </div>
-    " if Tangerine.settings.get("context") != "server"
+    " if Tangerine.settings.getBoolean("satelliteMode")
 
     @$el.html "
 
@@ -215,12 +215,12 @@ class AssessmentSyncView extends Backbone.View
 
   afterRender: ->
     if @user and @pass
-      $.ajax 
+      $.ajax
         url: Tangerine.settings.urlView("group", "byDKey").replace(/\/\/(.*)@/,"//#{@user}:#{@pass}@")
         dataType: "jsonp"
         data: keys: ["testtest"]
         timeout: 15000
-        success: => 
+        success: =>
           clearTimeout @timer
           @onVerifySuccess()
     else
@@ -296,16 +296,16 @@ class AssessmentSyncView extends Backbone.View
               html += "
                 </table>
               </div>
-              
+
               "
 
 
             docCount++
-          
+
           @$el.find("#conflicts").html html
 
         for row in rows
-          $.ajax 
+          $.ajax
             url: "/#{Tangerine.db_name}/#{row._id}?rev=#{row._rev}"
             type: "get"
             dataType: "json"

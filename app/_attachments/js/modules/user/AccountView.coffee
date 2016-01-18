@@ -20,7 +20,7 @@ class AccountView extends Backbone.View
     'click .change_password' : "togglePassword"
     'click .confirm_password' : "saveNewPassword"
 
-  togglePassword: -> 
+  togglePassword: ->
     $menu = @$el.find(".password_menu")
     $menu.toggle()
     if $menu.is(":visible")
@@ -43,8 +43,8 @@ class AccountView extends Backbone.View
 
       keys: ["teacher", "klass", "student", "config", "settings"]
 
-      success: (response) -> 
-        
+      success: (response) ->
+
         docId = "debug-report-#{Tangerine.settings.get('instanceId')}"
 
         saveReport = (response, oldRev = null, docId) ->
@@ -56,7 +56,7 @@ class AccountView extends Backbone.View
 
           delete doc._rev unless doc._rev?
 
-          Tangerine.$db.saveDoc doc, 
+          Tangerine.$db.saveDoc doc,
             success: ->
               $.couch.replicate Tangerine.db_name, Tangerine.settings.urlDB("group"),
                 success: ->
@@ -65,7 +65,7 @@ class AccountView extends Backbone.View
                 doc_ids: [docId]
 
 
-        Tangerine.$db.openDoc docId, 
+        Tangerine.$db.openDoc docId,
           success: (oldDoc) ->
             saveReport response, oldDoc._rev, docId
           error: (error) ->
@@ -74,17 +74,14 @@ class AccountView extends Backbone.View
 
   update: ->
     doResolve = @$el.find("#attempt_resolve").is(":checked")
-    
+
     Utils.updateTangerine(doResolve)
 
   restart: ->
     Utils.restartTangerine()
 
   goBack: ->
-    if Tangerine.settings.get("context") == "server"
-      Tangerine.router.navigate "groups", true
-    else
-      window.history.back()
+    Tangerine.router.navigate "groups", true
 
   joinToggle: ->
     @$el.find(".join, .join_confirmation").fadeToggle(0)
@@ -110,12 +107,13 @@ class AccountView extends Backbone.View
     models.push @teacher if @teacher?
 
     @models = new Backbone.Collection(models)
-    @user.on "group-join group-leave group-refresh", @renderGroups
-  
+    @listenTo @user, "groups-update", @renderGroups
+
   renderGroups: =>
+    groupLi = (group) -> "<li data-group='#{_.escape(group)}'>#{group} <button class='command leave'>Leave</button></li>"
     html = "<ul>"
-    for group in (@user.get("groups") || [])
-      html += "<li data-group='#{_.escape(group)}'>#{group} <button class='command leave'>Leave</button></li>"
+    html += @user.groups().admin.map((g) -> groupLi(g)).join('')
+    html += @user.groups().member.map((g) -> groupLi(g)).join('')
     html += "</ul>"
     @$el.find("#group_wrapper").html html
 
@@ -138,67 +136,16 @@ class AccountView extends Backbone.View
             </div>
           </div>
         </section>
-    " if Tangerine.settings.get("context") == "server"
+    "
 
-
-    if Tangerine.settings.get("context") != "server" && Tangerine.user.isAdmin()
-      settingsButton = "<a href='#settings' class='navigation'><button class='navigation'>Settings</button></a>"
-      logsButton = "<a href='#logs' class='navigation'><button class='navigation'>Logs</button></a>"
-
-    applicationMenu = "
-      <section>
-        <h2>Application</h2>
-        <table class='menu_box'>
-          <tr>
-            <td><button class='command update'>Update</button></td>
-            <td><input type='checkbox' id='attempt_resolve'></td>
-            <td><label for='attempt_resolve'>Legacy method</label></td>
-          </tr>
-        </table><br>
-        <button class='command restart'>Restart</button><br>
-        <button class='command send_debug'>Send debug report</button>
-      </section>
-
-      
-    " if Tangerine.user.isAdmin() && Tangerine.settings.get("context") != "server"
-
-    teachersButton = "
-      <a href='#teachers' class='navigation'><button class='navigation'>Teachers</button></a>
-    " if Tangerine.user.isAdmin() && Tangerine.settings.get("context") == "class"
-
-    userEdits = 
-      if "server" is Tangerine.settings.get("context")
-        @getEditableRow({key:"email", name:"Email"}, @user) +
-        @getEditableRow({key:"first", name:"First name"}, @user) +
-        @getEditableRow({key:"last", name:"Last name"}, @user)
-
-      else if "mobile" is Tangerine.settings.get("context")
-        @getEditableRow({key:"email", name:"Email"}, @user)
-
-      else if "class" is Tangerine.settings.get("context")
-        @getEditableRow({key:"first",   name:"First name"}, @teacher)   +
-        @getEditableRow({key:"last",    name:"Last name"}, @teacher)    +
-        @getEditableRow({key:"gender",  name:"Gender"}, @teacher)       +
-        @getEditableRow({key:"school",  name:"School"}, @teacher)       +
-        @getEditableRow({key:"contact", name:"Contact info"}, @teacher)
-    
-    passwordReset = "
-      <button class='change_password command'>Change password</button></td>
-      <div class='password_menu' style='display:none;'>
-        <label for='new_password'>New Password</label><br>
-        <input id='new_password'><br>
-        <button class='confirm_password command'>Change</button>
-      </div>
-    " if "class" is Tangerine.settings.get("context")
+    userEdits =
+      @getEditableRow({key:"email", name:"Email"}, @user) +
+      @getEditableRow({key:"first", name:"First name"}, @user) +
+      @getEditableRow({key:"last", name:"Last name"}, @user)
 
     html = "
       <button class='back navigation'>Back</button>
       <h1>Manage</h1>
-      #{settingsButton || ""}
-      #{logsButton || ""}
-      #{teachersButton || ""}
-      
-      #{applicationMenu || ""}
 
       <section>
         <h2>Account</h2>
@@ -209,14 +156,13 @@ class AccountView extends Backbone.View
             </tr>
             #{userEdits || ''}
           </table>
-          #{passwordReset || ''}
       </section>
       #{groupSection || ""}
       </div>
     "
 
     @$el.html html
-    @renderGroups() if Tangerine.settings.get("context") == "server"
+    @renderGroups()
 
     @trigger "rendered"
 
@@ -232,9 +178,9 @@ class AccountView extends Backbone.View
     value = "not set" if not value? or _.isEmptyString(value)
 
     # what is it
-    editOrNot   = if prop.editable && Tangerine.settings.get("context") == "server" then "class='edit_in_place'" else ""
+    editOrNot   = if prop.editable then "class='edit_in_place'" else ""
 
-    numberOrNot = if _.isNumber(value) then "data-isNumber='true'" else "data-isNumber='false'" 
+    numberOrNot = if _.isNumber(value) then "data-isNumber='true'" else "data-isNumber='false'"
 
     return "<div class='edit_in_place'><span data-modelId='#{model.id}' data-key='#{prop.key}' data-value='#{value}' data-name='#{prop.name}' #{editOrNot} #{numberOrNot}>#{value}</div></div>"
 
@@ -315,14 +261,14 @@ class AccountView extends Backbone.View
       model.save attributes,
         success: =>
           Utils.midAlert "#{name} saved"
-          model.fetch 
+          model.fetch
             success: =>
               if @updateDisplay?
                 @updateDisplay()
               else
                 @render()
         error: =>
-          model.fetch 
+          model.fetch
             success: =>
               if @updateDisplay?
                 @updateDisplay()
@@ -331,7 +277,7 @@ class AccountView extends Backbone.View
               # ideally we wouldn't have to save this but conflicts happen sometimes
               # @TODO make the model try again when unsuccessful.
               alert "Please try to save again, it didn't work that time."
-    
+
     # this ensures we do not insert a newline character when we press enter
     return false
 

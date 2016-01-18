@@ -21,7 +21,7 @@ class ResultSumView extends Backbone.View
     @result = options.model
     @finishCheck = options.finishCheck
     @finished = if _.last(@result.attributes.subtestData)?.data.end_time? then true else false
-    
+
     @studentId = ""
     for subtest in @result.attributes.subtestData
       prototype = subtest.prototype
@@ -38,8 +38,8 @@ class ResultSumView extends Backbone.View
     html += "
       </div>
     "
-    
+
     @$el.html html
-    
+
     @trigger "rendered"
 

@@ -74,11 +74,6 @@ class AssessmentDataEntryView extends Backbone.View
       data :
         "comment" : "Data entry feature"
         "end_time" : (new Date()).getTime()
-      sum :
-        correct : 1
-        incorrect : 0
-        missing : 0
-        total : 1
       subtestId : "result"
 
     @trigger "rendered"

@@ -1,7 +1,7 @@
 ###
 
 This returns an array of objects that describe a CSV
-The only real behavior worth mentioning here is 
+The only real behavior worth mentioning here is
 
 ###
 
@@ -13,21 +13,19 @@ The only real behavior worth mentioning here is
 
   utils = require("views/lib/utils")
 
-  exportValue = utils.exportValue
   cell        = utils.cell
 
   prototypes  = require("views/lib/prototypes")
 
-  pairsGrid        = prototypes.pairsGrid
-  pairsSurvey      = prototypes.pairsSurvey
-  pairsDatetime    = prototypes.pairsDatetime
-  pairsObservation = prototypes.pairsObservation
-  pairsGps         = prototypes.pairsGps
-  pairsLocation    = prototypes.pairsLocation
+  cellsGrid        = prototypes.cellsGrid
+  cellsSurvey      = prototypes.cellsSurvey
+  cellsDatetime    = prototypes.cellsDatetime
+  cellsGps         = prototypes.cellsGps
+  cellsLocation    = prototypes.cellsLocation
 
   subtestData = doc.subtestData
 
-  isClassResult = typeof doc.klassId isnt "undefined" 
+  isClassResult = typeof doc.klassId isnt "undefined"
 
   # turn class results into regular results
   if isClassResult
@@ -43,23 +41,6 @@ The only real behavior worth mentioning here is
       subtestId : doc.subtestId
     } ]
 
-    log "klass Result: #{doc._id}"
-
-
-  ###
-  Fix doubles (temporary)
-  ###
-
-  doublesIncluded = clone(subtestData)
-
-  subtestData = []
-  subtestIds  = []
-
-  for subtest in doublesIncluded
-    #log subtest.subtestId + " " + subtestIds.indexOf(subtest.subtestId)
-    if subtestIds.indexOf(subtest.subtestId) == -1
-      subtestData.push(subtest)
-      subtestIds.push(subtest.subtestId)
 
   result = []
 
@@ -68,40 +49,46 @@ The only real behavior worth mentioning here is
   ###
 
   if isClassResult
-    result.push cell "universal", "studentId", doc['studentId']
+    result.push cell "universal", "studentId",  doc.studentId
   else
-    result.push cell "universal", "enumerator",   doc['enumerator']
-    result.push cell "universal", "start_time", ( doc['starttime'] || doc['start_time'] )
-    result.push cell "universal", "order_map",  (if doc['order_map']? then doc['order_map'].join(",") else "no_record")
+    result.push cell "universal", "enumerator", doc.enumerator
+    result.push cell "universal", "start_time", doc.startTime || ''
+    result.push cell "universal", "order_map",  (doc.order_map || []).join(",")
 
-  #
-  # Subtest loop
-  #
+
   datetimeCount = 0;
   linearOrder = subtestData.map (el, i) -> return i
 
-  orderMap = if doc["order_map"]?
-      doc["order_map"]
-    else if doc["orderMap"]?
-      doc["orderMap"]
-    else
-      linearOrder
+  orderMap = doc.orderMap
+
+  # delete this when standardized
+  if typeof orderMap == "undefined" then orderMap = doc.order_map
+  if typeof orderMap == "undefined"
+    orderMap = linearOrder
+  # end delete
 
   timestamps = []
 
+
+  # Do this in case the number of subtests isn't always the total number
   orderedSubtests = orderMap.map (index) ->
     tmp = subtestData[index]
     subtestData[index] = null
     return tmp
 
   orderedSubtests = orderedSubtests.concat(subtestData);
+
   subtests = []
+
   for subtest in orderedSubtests
     subtests.push(subtest) if subtest?
 
   orderedSubtests = subtests
+
   # go through each subtest in this result
   for subtest in orderedSubtests
+
+    continue if subtest is null # not quite sure how this happens
 
     prototype = subtest['prototype']
 
@@ -114,35 +101,34 @@ The only real behavior worth mentioning here is
     else if prototype == "complete"
       result = result.concat [
         cell subtest, "additional_comments", subtest.data.comment
-        cell subtest, "end_time"           , subtest.data.end_time
+        cell subtest, "end_time"           , subtest.data.endTime
       ]
 
     else if prototype == "datetime"
       datetimeSuffix = if datetimeCount > 0 then "_#{datetimeCount}" else ""
-      result = result.concat( pairsDatetime( subtest, datetimeSuffix ) )
+      result = result.concat( cellsDatetime( subtest, datetimeSuffix ) )
       datetimeCount++
 
     else if prototype == "location"
-      result = result.concat pairsLocation subtest
+      result = result.concat cellsLocation subtest
 
     else if prototype == "grid"
-      result = result.concat pairsGrid subtest, isClassResult
+      result = result.concat cellsGrid subtest, isClassResult
 
     else if prototype == "survey"
-      result = result.concat pairsSurvey subtest
+      result = result.concat cellsSurvey subtest
 
     else if prototype == "observation"
-      result = result.concat pairsObservation subtest
+      result = result.concat cellsObservation subtest
 
     else if prototype == "gps"
-      result = result.concat pairsGps subtest
+      result = result.concat cellsGps subtest
 
     timestamps.push subtest.timestamp
 
   timestamps.sort()
   for timestamp, i in timestamps
     result.push cell("timestamp_" + i, "timestamp_" + i, timestamp)
-
 
   keyId =
     if isClassResult

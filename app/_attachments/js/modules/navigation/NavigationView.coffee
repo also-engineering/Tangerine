@@ -12,13 +12,6 @@ class NavigationView extends Backbone.View
     'click #username'       : 'gotoAccount'
   }
 
-  calcWhoAmI: =>
-    # who am I
-    @whoAmI = Tangerine.settings.contextualize
-      mobile: @text.enumerator
-      klass : @text.teacher
-      allElse : @text.user
-
   refreshDropDownPosition: ->
     userPosistion = @$el.find("#username-container").position()
     $ul = @$el.find("#username-dropdown")
@@ -30,10 +23,10 @@ class NavigationView extends Backbone.View
   userMenuOut: => @refreshDropDownPosition(); @$el.find("#username-dropdown").hide()
 
   gotoAccount: ->
-    if @user.isAdmin() or "class" is Tangerine.settings.get("context")
+    if @user.isAdmin()
       Tangerine.router.navigate "account", true
 
-  logoClick: -> 
+  logoClick: ->
     if @user.isAdmin()
       Tangerine.activity = ""
       @router.landing(true)
@@ -45,7 +38,7 @@ class NavigationView extends Backbone.View
           @router.landing(true)
 
   logout: ->
-    if @user.isAdmin() || Tangerine.settings.get("context") == "server"
+    if @user.isAdmin()
       Tangerine.activity = ""
       Tangerine.user.logout()
     else
@@ -70,12 +63,13 @@ class NavigationView extends Backbone.View
     @user   = options.user
     @router = options.router
 
-    @calcWhoAmI()
+    @whoAmI = @text.user
 
     @router.on 'all', @handleMenu
     @user.on   'login logout', @handleMenu
 
   i18n: ->
+
     @text =
 
       "logout"            : t('NavigationView.button.logout')
@@ -115,7 +109,7 @@ class NavigationView extends Backbone.View
 
           <label title='#{@text.account}'>#{@whoAmI}</label>
           <div id='username'>#{Tangerine.user.name() || ""}</div>
-      
+
           <ul id='username-dropdown'>
             <li><a href='#account'>#{@text.account_button}</a></li>
             <li><a href='#settings'>#{@text.settings_button}</a></li>
@@ -126,7 +120,7 @@ class NavigationView extends Backbone.View
         <li id='logout'>#{@text.logout}</li>
 
       </ul>
-      
+
     "
 
     # set up user menu
@@ -134,7 +128,7 @@ class NavigationView extends Backbone.View
       @$el.find("#username-container").hover @userMenuIn, @userMenuOut
 
     # Spin the logo on ajax calls
-    $(document).ajaxStart -> 
+    $(document).ajaxStart ->
       if $("#navigation-logo").attr("src") isnt "images/navigation-logo-spin.gif"
         $("#navigation-logo").attr "src", "images/navigation-logo-spin.gif"
     $(document).ajaxStop ->
@@ -150,10 +144,9 @@ class NavigationView extends Backbone.View
       @$el.find('#student-id').html(id)
 
 
-  # Admins get a manage button 
+  # Admins get a manage button
   # triggered on user changes
   handleMenu: (event) =>
-    @calcWhoAmI()
 
     $("#username_label").html @whoAmI
 

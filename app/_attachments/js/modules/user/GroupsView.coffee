@@ -6,6 +6,9 @@ class GroupsView extends Backbone.View
     'click .account' : 'gotoAccount'
     'click .goto'    : 'gotoGroup'
 
+  initialize: ->
+    Robbert.fetchUsers
+
   gotoAccount: ->
     Tangerine.router.navigate "account", true
 
@@ -13,18 +16,21 @@ class GroupsView extends Backbone.View
     group = $(event.target).attr("data-group")
     window.location = Tangerine.settings.urlIndex(group, "assessments")
 
-  render: ->
-    groups = Tangerine.user.get("groups") || []
-    html = "
-      <button class='account navigation'>Account</button>
-      <h1>Groups</h1>
+  renderGroups: ->
+    @$el.find('#group-list-container').html "
+      <h2>Admin</h2>
+        #{Tangerine.user.groups().admin.map( (group) -> "<button class='command goto' data-group='#{_.escape(group)}'>#{group}</button>").join('')}
+      <h2>Member</h2>
+        #{Tangerine.user.groups().member.map( (group) -> "<button class='command goto' data-group='#{_.escape(group)}'>#{group}</button>").join('')}
     "
 
-    if groups.length == 0
-      html += "You are not yet a member of a group. Go to Account to join a group."
-    else 
-      for group, i in groups
-        html += "<button class='command goto' data-group='#{_.escape(group)}'>#{group}</button>"
+  render: ->
+    @$el.html "
+      <button class='account navigation'>Account</button>
+      <h1>Groups</h1>
+      <div id='group-adder'></div>
+      <div id='group-list-container'><img src='images/loading.gif' class='loading'></div>
+    "
 
-    @$el.html html
+    @renderGroups()
     @trigger "rendered"

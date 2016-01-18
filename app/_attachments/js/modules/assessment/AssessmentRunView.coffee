@@ -164,7 +164,6 @@ class AssessmentRunView extends Backbone.View
           subtestHash : subtestResult.meta.hash
           subtestId   : currentView.model.id
           prototype   : currentView.model.get "prototype"
-          sum         : currentView.getSum()
       @reset increment
 
     else
@@ -174,7 +173,6 @@ class AssessmentRunView extends Backbone.View
         subtestHash : subtestResult.meta.hash
         subtestId   : currentView.model.id
         prototype   : currentView.model.get "prototype"
-        sum         : currentView.getSum()
       ,
         success : =>
           @reset increment

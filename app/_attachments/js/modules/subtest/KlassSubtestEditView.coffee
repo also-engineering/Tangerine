@@ -250,7 +250,7 @@ class KlassSubtestEditView extends Backbone.View
         # get linked grid options
         subtests = new Subtests
         subtests.fetch
-          key: @curriculum.id
+          key: "s" + @curriculum.id
           success: (collection) =>
             collection = new Subtests collection.where
               prototype : 'grid' # only grids can provide scores

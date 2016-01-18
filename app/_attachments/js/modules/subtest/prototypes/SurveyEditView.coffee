@@ -17,7 +17,7 @@ class SurveyEditView extends Backbone.View
 
     Utils.working true
     @model.questions.fetch
-      key: @model.get "assessmentId"
+      key: "q" + @model.get "assessmentId"
       success: =>
         Utils.working false
         @questionsEditView.questions = new Questions(@model.questions.where {subtestId : @model.id  })
@@ -185,7 +185,7 @@ class SurveyEditView extends Backbone.View
     # get linked grid options
     subtests = new Subtests
     subtests.fetch
-      key: @model.get "assessmentId"
+      key: "s" + @model.get "assessmentId"
       success: (collection) =>
         collection = collection.where
           prototype    : 'grid' # only grids can provide scores

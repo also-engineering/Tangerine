@@ -1,50 +1,34 @@
-utils = 
-  
-  exportValueMap :
-    "correct" : 1
-    "checked" : 1
+gridValueMap =
+    C : "1"   # correct
+    I : "0"   # incorrect
+    M : "."   # missing
+    S : "999" # skipped
 
-    "incorrect" : "0"
-    "unchecked" : "0"
+surveyValueMap =
+    C : "1"   # checked
+    U : "0"   # unchecked
+    N : "."   # not asked
+    S : "999" # skipped
 
-    "missing"   : "."
-    "not_asked" : "."
-    
-    "skipped"   : 999
 
-  exportValue : ( databaseValue = "no_record" ) ->
-    if utils.exportValueMap[databaseValue]?
-      return utils.exportValueMap[databaseValue]
-    else
-      return String(databaseValue)
+translatedGridValue = ( databaseValue = "no_record" ) ->
+  return gridValueMap[databaseValue] || String(databaseValue)
 
-  # returns an object {key: value}
-  pair : (key, value) ->
-    if value == undefined then value = "no_record"
-    o = {}
-    o[key] = value
-    return o
+translatedSurveyValue = ( databaseValue = "no_record" ) ->
+  return surveyValueMap[databaseValue] || String(databaseValue)
 
-  unpair : (pair) ->
-    for key, value of pair
-      return [key, value]
-    "object not found" # coffeescript return weirdness
+# Makes an object that descrbes a csv value
+cell = ( subtest, key, value ) ->
+  idValue = subtest.subtestId || String(subtest)
+  machineName = "#{idValue}-#{key}"
 
-  # Makes an object that descrbes a csv value
-  cell : ( subtest, key, value ) ->
-    if typeof subtest is "string"
-      machineName = "#{subtest}-#{key}"
-    else
-      machineName = "#{subtest.subtestId}-#{key}"
-    return {
-      key : key
-      value : value
-      machineName : machineName
-    }
+  return {
+    k : key
+    v : value
+    m : machineName
+  }
 
-if typeof(exports) == "object"
-  exports.cell        = utils.cell
-  exports.clone       = utils.clone
-  exports.exportValue = utils.exportValue
-  exports.pair        = utils.pair
-  exports.unpair      = utils.unpair
+exports.cell        = cell
+
+exports.translatedSurveyValue = translatedSurveyValue
+exports.translatedGridValue = translatedGridValue

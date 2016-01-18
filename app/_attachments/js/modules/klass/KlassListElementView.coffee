@@ -20,12 +20,12 @@ class KlassListElementView extends Backbone.View
 
     @availableReports = Tangerine.config.get("reports")
     if options.klass.has "curriculumId"
-      @curriculum = new Curriculum 
+      @curriculum = new Curriculum
         "_id" : options.klass.get "curriculumId" || ""
       @curriculum.fetch
         success : @render
     else
-      @curriculum = new Curriculum 
+      @curriculum = new Curriculum
 
   edit: ->
     Tangerine.router.navigate "class/edit/" + @klass.id, true
@@ -67,12 +67,12 @@ class KlassListElementView extends Backbone.View
 
     htmlTeacher = "
       <tr><th>Teacher</th><td>#{teacherName}</td></tr>
-    " if Tangerine.user.isAdmin() 
+    " if Tangerine.user.isAdmin()
 
     menuOptions = ""
     for report in @availableReports
-      if not report.context? or report.context is Tangerine.settings.get('context')
-        menuOptions += "<option data-menu_view='#{report.menuView}'>#{t(report.name)}</option>" 
+      if not report.context? or report.context is 'server'
+        menuOptions += "<option data-menu_view='#{report.menuView}'>#{t(report.name)}</option>"
 
     @$el.html "
       <table>
@@ -83,10 +83,10 @@ class KlassListElementView extends Backbone.View
         <tr><th>#{t('stream')}</th><td>#{@klass.getString('stream')}</td></tr>
         <tr><th>#{t('curriculum')}</th><td>#{@curriculum.getEscapedString('name')}</td></tr>
       </table>
-      <img src='images/icon_run.png'     class='icon klass_run'> 
-      <img src='images/icon_results.png' class='icon klass_results'> 
-      <img src='images/icon_edit.png'    class='icon klass_edit'> 
-      <img src='images/icon_delete.png'  class='icon klass_delete'> 
+      <img src='images/icon_run.png'     class='icon klass_run'>
+      <img src='images/icon_results.png' class='icon klass_results'>
+      <img src='images/icon_edit.png'    class='icon klass_edit'>
+      <img src='images/icon_delete.png'  class='icon klass_delete'>
       <div class='report_select_container confirmation'>
         <div class='menu_box'>
           <select id='report'>

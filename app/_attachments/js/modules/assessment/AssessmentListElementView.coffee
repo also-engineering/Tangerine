@@ -55,7 +55,7 @@ class AssessmentListElementView extends Backbone.View
 
   duplicate: ->
     newName = "Copy of " + @model.get("name")
-    @model.duplicate { name : newName }, null, null, (assessment) => 
+    @model.duplicate { name : newName }, null, null, (assessment) =>
       @model.trigger "new", assessment
 
   copyTo: (group) ->
@@ -110,7 +110,7 @@ class AssessmentListElementView extends Backbone.View
 
   updateResultCount: =>
     #@resultCount = Math.commas @model.resultCount
-    #@$el.find(".result_count").html "Results <b>#{@resultCount}</b>" 
+    #@$el.find(".result_count").html "Results <b>#{@resultCount}</b>"
 
   archive: ->
     result = @$el.find(".archive :selected").val() == "true"
@@ -118,7 +118,7 @@ class AssessmentListElementView extends Backbone.View
       @$el.find(".admin_name").addClass "archived_assessment"
     else
       @$el.find(".admin_name").removeClass "archived_assessment"
-    
+
     @model.save
       archived : result
     return true
@@ -148,7 +148,7 @@ class AssessmentListElementView extends Backbone.View
     return result
 
   ul: (options)->
-    
+
     html = "<ul #{if options.cssClass then "class='#{options.cssClass}'" else ''}>"
     html += @spriteListLink.apply @, ["li"].concat(options.links)
     html += options.other || ''
@@ -157,12 +157,6 @@ class AssessmentListElementView extends Backbone.View
   render: ->
 
     isArchived = @model.getBoolean('archived')
-
-    # do not display archived assessments for enumerators
-    if not @isAdmin and isArchived and Tangerine.settings.get("context") == "mobile"
-      @$el.addClass "hidden"
-      return
-
 
     # commands
 
@@ -188,8 +182,7 @@ class AssessmentListElementView extends Backbone.View
       </div>
     "
 
-
-    downloadKey   = "<li class='download_key small_grey'>Download key <b>#{@model.id.substr(-5,5)}</b></li>"
+    downloadKey   = "<li class='download_key small_grey'>Download key <b>#{@model.get("_id").substr(-5,5)}</b></li>"
     archiveSwitch = "
       <select class='archive'>
         <option value='false' #{if isArchived then selected else ''}>Active</option>
@@ -197,7 +190,7 @@ class AssessmentListElementView extends Backbone.View
       </select>
     "
 
-    if @isAdmin && "server" is Tangerine.settings.get("context")
+    if @isAdmin
       # admin standard
       @$el.html "
         <div>
@@ -215,7 +208,7 @@ class AssessmentListElementView extends Backbone.View
         </div>
         "
 
-    else if @isAdmin && "satellite" is Tangerine.settings.get("context")
+    else if @isAdmin and Tangerine.settings.getBoolean('satellite')
 
       @$el.html "
         <div>
@@ -223,7 +216,7 @@ class AssessmentListElementView extends Backbone.View
           #{adminName}
         </div>
 
-        #{@ul 
+        #{@ul
           cssClass: "assessment_menu"
           links : ["run","results","edit","sync","print"]
           other : @spriteEvents("li", "duplicate", "assessment_delete") + downloadKey
@@ -233,35 +226,14 @@ class AssessmentListElementView extends Backbone.View
           #{printSelector}
         </div>
       "
-    
 
-    else if @isAdmin
-      @$el.html "
-        <div>
-          #{toggleButton}
-          #{adminName}
-        </div>
-      " + @ul 
-          cssClass: "assessment_menu"
-          links : ["run","results","update","delete"]
-          other : deleteConfirm
-
-    
-    else if "server" is Tangerine.settings.get("context")
+    else
       @$el.html "
         <div class='non_admin'>
           #{@spriteListLink("span",'run')}#{name} #{@spriteListLink("span",'results')} #{@spriteListLink("span",'print')}
         </div>
         <div class='sub_menus'>
           #{printSelector}
-        </div>
-
-      "
-
-    else
-      @$el.html "
-        <div class='non_admin'>
-          #{@spriteListLink("span",'run')}#{name} #{@spriteListLink("span",'results')}
         </div>
       "
 

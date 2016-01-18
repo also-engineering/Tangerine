@@ -21,7 +21,7 @@ class KlassesView extends Backbone.View
     @klasses   = options.klasses
     @curricula = options.curricula
     @teachers  = options.teachers
-    
+
     @klasses.on "add remove change", @render
 
     if Tangerine.user.isAdmin()
@@ -31,13 +31,13 @@ class KlassesView extends Backbone.View
       , 20 * 1000
 
       # try to verify the connection to the server
-      verReq = $.ajax 
+      verReq = $.ajax
         url: Tangerine.settings.urlView("group", "byDKey")
         dataType: "jsonp"
         data: keys: ["testtest"]
         timeout: 5000
         success: =>
-          clearTimeout @timer 
+          clearTimeout @timer
           @updateUploader true
 
   ghostLogin: ->
@@ -71,7 +71,7 @@ class KlassesView extends Backbone.View
     html =
       if status == true
         "<button class='upload_data command'>Upload</button>"
-      else if status == false 
+      else if status == false
         "<div class='menu_box'><small>No connection</small><br><button class='command verify'>Verify connection</button></div>"
       else
         "<button class='command' disabled='disabled'>Verifying connection...</button>"
@@ -92,7 +92,7 @@ class KlassesView extends Backbone.View
 
     Utils.working true
     @randomIdDoc = hex_sha1(""+Math.random())
-    Tangerine.$db.saveDoc 
+    Tangerine.$db.saveDoc
       "_id" : @randomIdDoc
     ,
       success: (doc) =>
@@ -167,7 +167,7 @@ class KlassesView extends Backbone.View
               "url"         : Tangerine.settings.urlSubnet(ip) + "/_design/tangerine/_view/byCollection"
               "dataType"    : "jsonp"
               "contentType" : "application/json;charset=utf-8",
-              "data"        : 
+              "data"        :
                 include_docs : false
                 keys : JSON.stringify(['result', 'klass', 'student','curriculum', 'teacher', 'logs'])
 
@@ -191,7 +191,7 @@ class KlassesView extends Backbone.View
     if @tablets.complete == @tablets.okCount
       Utils.working false
       Utils.midAlert "Pull finished.<br>#{@tablets.successful} out of #{@tablets.okCount} successful.", 5000
-      Tangerine.$db.removeDoc 
+      Tangerine.$db.removeDoc
         "_id"  : @randomDoc.id
         "_rev" : @randomDoc.rev
       @klasses.fetch success: => @renderKlasses()
@@ -209,13 +209,13 @@ class KlassesView extends Backbone.View
 
     errors = []
     errors.push " - No school name."         if schoolName == ""
-    errors.push " - No year."                if year       == "" 
-    errors.push " - No grade."               if grade      == "" 
-    errors.push " - No stream."              if stream     == "" 
-    errors.push " - No curriculum selected." if curriculum == "_none" 
-    
+    errors.push " - No year."                if year       == ""
+    errors.push " - No grade."               if grade      == ""
+    errors.push " - No stream."              if stream     == ""
+    errors.push " - No curriculum selected." if curriculum == "_none"
+
     for klass in @klasses.models
-      if klass.get("year")   == year && 
+      if klass.get("year")   == year &&
          klass.get("grade")  == grade &&
          klass.get("stream") == stream
         errors.push " - Duplicate year, grade, stream."
@@ -226,7 +226,7 @@ class KlassesView extends Backbone.View
       else
         "admin"
       klass = new Klass
-      klass.save 
+      klass.save
         teacherId    : teacherId
         schoolName   : schoolName
         year         : year
@@ -277,16 +277,6 @@ class KlassesView extends Backbone.View
     for curricula in @curricula.models
       curriculaOptionList += "<option data-id='#{curricula.id}'>#{curricula.get 'name'}</option>"
 
-    adminPanel = "
-      <h1>Admin menu</h1>
-      <button class='pull_data command'>Pull data</button>
-      <div class='uploader'></div>
-    " if Tangerine.user.isAdmin() && Tangerine.settings.get("context") isnt "server"
-
-    curriculaButton = "
-      <button class='command curricula'>#{t('all curricula')}</button>
-    " if Tangerine.settings.get("context") isnt "server"
-
     @$el.html "
       #{adminPanel || ""}
       <h1>#{t('classes')}</h1>
@@ -294,7 +284,7 @@ class KlassesView extends Backbone.View
 
       <button class='klass_add command'>#{t('add')}</button>
       <div id='add_form' class='confirmation'>
-        <div class='menu_box'> 
+        <div class='menu_box'>
           <div class='label_value'>
             <label for='school_name'>School name</label>
             <input id='school_name'>
@@ -324,7 +314,7 @@ class KlassesView extends Backbone.View
     @updateUploader() if Tangerine.user.isAdmin()
 
     @renderKlasses()
-    
+
     @trigger "rendered"
 
   closeViews: ->

@@ -16,7 +16,7 @@ class Assessment extends Backbone.Model
   verifyConnection: ( callbacks = {} ) =>
     console.log "called"
     @timer = setTimeout(callbacks.error, @VERIFY_TIMEOUT) if callbacks.error?
-    $.ajax 
+    $.ajax
       url: Tangerine.settings.urlView("group", "byDKey")
       dataType: "jsonp"
       data: keys: ["testtest"]
@@ -46,7 +46,7 @@ class Assessment extends Backbone.Model
     options.success = (model) =>
         allSubtests = new Subtests
         allSubtests.fetch
-          key: @id
+          key: "s" + @id
           success: (collection) =>
             @subtests = collection
             @subtests.ensureOrder()
@@ -65,26 +65,14 @@ class Assessment extends Backbone.Model
 
     @trigger "status", "import lookup"
 
-    if Tangerine.settings.get("context") == "server"
-      sourceDB = "group-" + group
-      targetDB = Tangerine.settings.groupDB
-    else
-      sourceDB = Tangerine.settings.urlDB("group")
-      targetDB = Tangerine.settings.urlDB("local")
+    sourceDB = "group-" + group
+    targetDB = Tangerine.settings.groupDB
 
-    localDKey = 
-      if Tangerine.settings.get("context") != "server"
-        Tangerine.settings.urlView("local", "byDKey")
-      else
-        Tangerine.settings.location.group.db+Tangerine.settings.couch.view + "byDKey"
+    localDKey = Tangerine.settings.location.group.db+Tangerine.settings.couch.view + "byDKey"
 
-    sourceDKey =
-      if Tangerine.settings.get("context") != "server"
-        Tangerine.settings.urlView("group", "byDKey")
-      else
-        "/"+sourceDB+"/"+Tangerine.settings.couch.view + "byDKey"
+    sourceDKey = "/"+sourceDB+"/"+Tangerine.settings.couch.view + "byDKey"
 
-    $.ajax 
+    $.ajax
       url: sourceDKey,
       type: "GET"
       dataType: "jsonp"
@@ -95,7 +83,7 @@ class Assessment extends Backbone.Model
         for datum in data.rows
           docList.push datum.id
 
-        $.ajax 
+        $.ajax
           url: localDKey,
           type: "POST"
           contentType: "application/json"
@@ -108,11 +96,11 @@ class Assessment extends Backbone.Model
 
             docList = _.uniq(docList)
 
-            $.couch.replicate( 
+            $.couch.replicate(
               sourceDB,
               targetDB,
-                success: (response)=> 
-                  @checkConflicts docList 
+                success: (response)=>
+                  @checkConflicts docList
                   @trigger "status", "import success", response
                 error: (a, b)      => @trigger "status", "import error", "#{a} #{b}"
               ,
@@ -141,7 +129,7 @@ class Assessment extends Backbone.Model
                   type: "PUT"
                   dataType: "json"
                   url: "http://localhost:5984/"+Tangerine.settings.urlDB("local") + "/" +doc._id
-                  data: JSON.stringify( 
+                  data: JSON.stringify(
                     "_rev"      : doc._rev
                     "deletedAt" : doc.deletedAt
                     "_deleted"  : false
@@ -166,7 +154,7 @@ class Assessment extends Backbone.Model
                       type: "PUT"
                       dataType: "json"
                       url: "http://localhost:5984/"+Tangerine.settings.urlDB("local") + "/" +doc._id
-                      data: JSON.stringify( 
+                      data: JSON.stringify(
                         "_rev"      : doc._rev
                         "_deleted"  : true
                       )
@@ -187,19 +175,19 @@ class Assessment extends Backbone.Model
     dKeys = dKey.replace(/[^a-f0-9]/g," ").split(/\s+/)
 
     @trigger "status", "import lookup"
-    $.ajax 
+    $.ajax
       url: "http://tangerine.iriscouch.com/tangerine/_design/ojai/_view/byDKey"
       dataType: "json"
       contentType: "application/json"
       type: "GET"
-      data: 
+      data:
         keys : JSON.stringify(dKeys)
       success: (data) =>
         docList = []
         for datum in data.rows
           docList.push datum.id
-        $.couch.replicate( 
-          "http://tangerine.iriscouch.com/tangerine", 
+        $.couch.replicate(
+          "http://tangerine.iriscouch.com/tangerine",
           Tangerine.settings.groupDB,
             success:(response) => @trigger "status", "import success", response
             error: (a, b)      => @trigger "status", "import error", "#{a} #{b}"
@@ -230,7 +218,7 @@ class Assessment extends Backbone.Model
     clonedAttributes._id          = newId
     clonedAttributes.name         = "Copy of #{clonedAttributes.name}"
     clonedAttributes.assessmentId = newId
-    
+
     newModel = new Assessment(clonedAttributes)
 
     modelsToSave.push (newModel).stamp().attributes
@@ -238,12 +226,12 @@ class Assessment extends Backbone.Model
 
     getQuestions = ->
       questions.fetch
-        key: oldModel.id
+        key: "q" + oldModel.id
         success: -> getSubtests()
 
     getSubtests = ->
       subtests.fetch
-        key: oldModel.id
+        key: "s" + oldModel.id
         success: -> processDocs()
 
     processDocs = ->
@@ -252,14 +240,14 @@ class Assessment extends Backbone.Model
 
       # link new subtests to new assessment
       for subtest in subtests.models
-        
+
         oldSubtestId = subtest.id
         newSubtestId = Utils.guid()
 
         subtestIdMap[oldSubtestId] = newSubtestId
 
         $.extend(true, newAttributes = {}, subtest.attributes)
-        
+
         newAttributes._id          = newSubtestId
         newAttributes.assessmentId = newId
 
@@ -277,7 +265,7 @@ class Assessment extends Backbone.Model
 
         oldSubtestId = newAttributes.subtestId
 
-        newAttributes._id          = Utils.guid() 
+        newAttributes._id          = Utils.guid()
         newAttributes.subtestId    = subtestIdMap[oldSubtestId]
         newAttributes.assessmentId = newId
 
@@ -303,21 +291,21 @@ class Assessment extends Backbone.Model
 
     # get all docs that belong to this assesssment except results
     $.ajax
+      type: "POST"
       contentType: "application/json; charset=UTF-8"
       dataType: "json"
-      url: "/#{Tangerine.db_name}/_design/#{Tangerine.design_doc}/_view/revByAssessmentId?key=\"#{@id}\""
-      error: (xhr, status, err) -> Utils.midAlert "Delete error: 01"; Tangerine.log.db("assessment-delete-error-01","Error: #{err}, Status: #{status}, xhr:#{xhr.responseText||'none'}. headers: #{xhr.getAllResponseHeaders()}")
+      url: "/#{Tangerine.db_name}/_design/#{Tangerine.design_doc}/_view/byParentId"
+      data: JSON.stringify({ keys : ["s#{@id}","q#{@id}","a#{@id}"] })
+      error: (xhr, status, err) ->
+        Utils.midAlert "Delete error: 01";
+        Tangerine.log.db("assessment-delete-error-01","Error: #{err}, Status: #{status}, xhr:#{xhr.responseText||'none'}. headers: #{xhr.getAllResponseHeaders()}")
       success: (response) =>
 
-        docs = []
-        for row in response.rows
-          # only absolutely necessary properties are sent back, _id, _rev, _deleted
-          row.value["_deleted"] = true
-          row.value["deletedAt"] = Tangerine.settings.get("context")
-          docs.push row.value
-
-        requestData = 
-          "docs" : docs
+        requestData =
+          docs : response.rows.map (row) ->
+            "_id"  : row.id
+            "_rev" : row.value.r
+            "_deleted" : true
 
         $.ajax
           type: "POST"

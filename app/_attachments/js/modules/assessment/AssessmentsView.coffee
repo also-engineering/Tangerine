@@ -7,7 +7,7 @@ class AssessmentsView extends Backbone.View
   className : "AssessmentsView"
   tagName : "section"
 
-  events : 
+  events :
     "click .toggle_archived" : "toggleArchived"
 
   toggleArchived: (event) ->
@@ -48,23 +48,18 @@ class AssessmentsView extends Backbone.View
         "showAll"   : @showAll
 
 
-      if assessment.isArchived() && Tangerine.settings.get("context") == "server"
-        archivedViews.push newView 
+      if assessment.isArchived()
+        archivedViews.push newView
       else
         activeViews.push newView
 
     @subviews = archivedViews.concat activeViews
 
     # escape if no assessments in non-public list
-    if @subviews.length == 0 && not @isPublic
-      if Tangerine.settings.get("context") == "server"
-        @$el.html "<p class='grey'>No assessments yet. Click <b>new</b> to get started.</p>"
-      else
-        @$el.html "<p class='grey'>No assessments imported yet.</p>"
+    if @subviews.length == 0
+      @$el.html "<p class='grey'>No assessments yet. Click <b>new</b> to get started.</p>"
+      return @trigger "rendered"
 
-      @trigger "rendered"
-
-      return
 
     # templating and components
 
@@ -75,7 +70,7 @@ class AssessmentsView extends Backbone.View
       </div>
     "
 
-    showArchived = archivedViews.length != 0 && Tangerine.settings.get("context") == "server"
+    showArchived = archivedViews.length != 0
 
     @$el.html "
       <ul class='active_list assessment_list'></ul>

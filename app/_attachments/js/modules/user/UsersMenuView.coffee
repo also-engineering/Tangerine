@@ -5,58 +5,56 @@ class UsersMenuView extends Backbone.View
   events:
     "click .admin" : "selectAdmin"
     "click .reader" : "selectReader"
-    "click #add_admin"     : "addAdmin"
-    "click #remove_admin"  : "removeAdmin"
-    "click #add_reader"    : "addReader"
-    "click #remove_reader" : "removeReader"
+    "click #add-admin"     : "addAdmin"
+    "click #remove-admin"  : "removeAdmin"
+    "click #add-member"    : "addMember"
+    "click #remove-member" : "removeMember"
 
   selectAdmin: ( event ) ->
-    @$el.find("#selected_admin").val $(event.target).attr("data-name")
+    @$el.find("#selected-admin").val $(event.target).attr("data-name")
 
   selectReader: ( event ) ->
-    @$el.find("#selected_reader").val $(event.target).attr("data-name")
+    @$el.find("#selected-member").val $(event.target).attr("data-name")
 
   addAdmin: ->
-    user = @$el.find("#selected_admin").val()
-    @useRobbert "add_admin", user
+    user = @$el.find('#selected-admin').val()
+    Robbert.addAdmin user, @refreshUsers
 
   removeAdmin: ->
-    user = @$el.find("#selected_admin").val()
-    @useRobbert "remove_admin", user
+    user = @$el.find('#selected-admin').val()
+    Robbert.removeAdmin user, @refreshUsers
 
-  addReader: ->
-    user = @$el.find("#selected_reader").val()
-    @useRobbert "add_reader", user
+  addMember: ->
+    user = @$el.find('#selected-member').val()
+    Robbert.addMember user, @refreshUsers
 
-  removeReader: ->
-    user = @$el.find("#selected_reader").val()
-    @useRobbert "remove_reader", user
+  removeMember: ->
+    user = @$el.find('#selected-member').val()
+    Robbert.removeMember user, @refreshUsers
 
-  useRobbert : (action, user) ->
-    Utils.passwordPrompt ( auth_p ) =>
-        Robbert.request
-          "action" : action
-          "user"   : user
-          "group"  : Tangerine.settings.get("groupName") # without group prefix
-          "auth_u" : Tangerine.user.get("name")
-          "auth_p" : auth_p
-          success : ( response ) =>
-            Utils.midAlert response.message
-            Tangerine.user.fetch success: =>
-              @render()
-          error : (error) =>
-            Utils.midAlert "Server error\n\n#{error[1]}\n#{error[2]}"
+  refreshUsers: =>
+    Robbert.fetchUsers Tangerine.settings.get('groupName'), (users) => @renderUsers(users)
 
-  initialize: ->
+  renderUsers: (users) ->
+
+    adminHtml = users.admin.map( (admin) ->
+      "<li data-name='#{_.escape(admin)}' class='admin icon'>#{_.escape(admin)}</li>"
+    ).join('')
+    if users.member.length == 0
+      memberHtml = "<span class='grey'>No members yet.</span>"
+    else
+      memberHtml = users.member.map( (member) ->
+        "<li data-name='#{_.escape(member)}' class='member icon'>#{_.escape(member)}</li>"
+      ).join('')
+
+    @$el.find('#users-row').html "
+      <td><ul id='admin-container' multiple='multiple' size='5'>#{adminHtml}</ul></td>
+      <td><ul id='member-container' multiple='multiple' size='5'>#{memberHtml}</ul></td>
+    "
 
   render: ->
-    admins  = Tangerine.user.dbAdmins
-    readers = Tangerine.user.dbReaders
 
-    adminOptions  = ("<li data-name='#{_.escape(admin)}' class='admin icon'>#{_.escape(admin)}</li>" for admin in admins).join("")
-    readerOptions = if readers.length > 0 then ("<li data-name='#{_.escape(reader)}' class='reader icon'>#{_.escape(reader)}</li>" for reader in readers).join("") else "<span class='grey'>No members yet.</span>"
-
-    html = "
+    @$el.html "
       <h1>Users</h1>
       <table>
       <tr>
@@ -65,28 +63,19 @@ class UsersMenuView extends Backbone.View
       </tr>
       <tr>
         <td>
-          <input id='selected_admin'  value=''>
-          <button id='add_admin' class='command'>+</button>
-          <button id='remove_admin' class='command'>-</button>
+          <input id='selected-admin'  value=''>
+          <button id='add-admin' class='command'>+</button>
+          <button id='remove-admin' class='command'>-</button>
         </td>
         <td>
-          <input id='selected_reader' value=''>
-          <button id='add_reader' class='command'>+</button>
-          <button id='remove_reader' class='command'>-</button>
+          <input id='selected-member' value=''>
+          <button id='add-member' class='command'>+</button>
+          <button id='remove-member' class='command'>-</button>
         </td>
       </tr>
-      <tr>
-        <td>
-          <ul id='member_select' multiple='multiple' size='5'>
-            #{adminOptions}
-          </ul>
-        </td>
-        <td>
-          <ul id='reader_select' multiple='multiple' size='5'>
-            #{readerOptions}
-          </ul>
-        </td>
+      <tr id='users-row'>
       </tr>
     "
 
-    @$el.html html
+    @refreshUsers()
+

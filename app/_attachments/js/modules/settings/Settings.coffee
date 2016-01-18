@@ -9,29 +9,6 @@ class Settings extends Backbone.Model
     @config = Tangerine.config
     @on "all", => @update()
 
-  contextualize: (callbacks={}) ->
-    result = ""
-    if @get("context") == "server" and callbacks.server?
-      result += if _.isFunction(callbacks.server) then callbacks.server() else callbacks.server
-    else if @get("context") == "satellite" and callbacks.satellite?
-      result += if _.isFunction(callbacks.satellite) then callbacks.satellite() else callbacks.satellite
-    else if @get("context") == "mobile" and callbacks.mobile?
-      result += if _.isFunction(callbacks.mobile) then callbacks.mobile() else callbacks.mobile
-    else if @get("context") == "class" and callbacks.klass?
-      result += if _.isFunction(callbacks.klass) then callbacks.klass() else callbacks.klass
-    else if @get("context") != "server" and callbacks.notServer?
-      result += if _.isFunction(callbacks.notServer) then callbacks.notServer() else callbacks.notServer
-    else if @get("context") != "satellite" and callbacks.notSatellite?
-      result += if _.isFunction(callbacks.notSatellite) then callbacks.notSatellite() else callbacks.notSatellite
-    else if @get("context") != "mobile" and callbacks.notMobile?
-      result += if _.isFunction(callbacks.notMobile) then callbacks.notMobile() else callbacks.notMobile
-    else if @get("context") != "class" and callbacks.notKlass?
-      result += if _.isFunction(callbacks.notKlass) then callbacks.notKlass() else callbacks.notKlass
-    else if callbacks.allElse
-      result += if _.isFunction(callbacks.allElse) then callbacks.allElse() else callbacks.allElse
-
-    return result
-
   update: =>
     groupHost = @get "groupHost"
     groupName = @get "groupName"
@@ -55,11 +32,6 @@ class Settings extends Backbone.Model
 
     subnetBase = @config.get("subnet").base
 
-
-    if Tangerine.settings.get("context") != "server"
-      splitGroup = groupHost.split("://")
-      groupHost = "#{splitGroup[0]}://#{@upUser}:#{@upPass}@#{splitGroup[1]}"
-
     @location =
       local:
         url : "#{local.host}:#{port}/"
@@ -74,20 +46,20 @@ class Settings extends Backbone.Model
         url : "http://#{update.host}/"
         db  : "http://#{update.host}/#{update.dbName}/"
         target : update.target
-      subnet : 
+      subnet :
         url : ("http://#{subnetBase}#{@ipRange[x]}:#{port}/"                      for x in [0..255])
         db  : ("http://#{subnetBase}#{@ipRange[x]}:#{port}/#{Tangerine.db_name}/" for x in [0..255])
-      satellite : 
+      satellite :
         url : ("#{subnetBase}#{x}:#{port}/"                       for x in [0..255])
         db  : ("#{subnetBase}#{x}:#{port}/#{prefix}#{groupName}/" for x in [0..255])
 
-    @couch = 
+    @couch =
       view  : "_design/#{designDoc}/_view/"
       show  : "_design/#{designDoc}/_show/"
       list  : "_design/#{designDoc}/_list/"
       index : "_design/#{designDoc}/index.html"
 
-    @groupCouch = 
+    @groupCouch =
       view  : "_design/#{groupDDoc}/_view/"
       show  : "_design/#{groupDDoc}/_show/"
       list  : "_design/#{groupDDoc}/_list/"
@@ -106,14 +78,14 @@ class Settings extends Backbone.Model
 
     if groupName == "trunk"
       groupName = "tangerine"
-    else 
+    else
       groupName = @config.get("groupDBPrefix") + groupName
 
     return "#{groupHost}#{port}/#{groupName}/#{@couch.index}#{hash}"
 
   urlHost  : ( location ) -> "#{@location[location].url}"
-  
-  urlDB    : ( location, pass = null ) -> 
+
+  urlDB    : ( location, pass = null ) ->
     if location == "local"
       result = "#{@location[location].db}".slice(1,-1)
     else
@@ -131,23 +103,23 @@ class Settings extends Backbone.Model
     return "#{@urlDB('trunk')}/_design/#{dDoc}"
 
   urlView  : ( location, view ) ->
-    if location == "group" || Tangerine.settings.get("context") == "server"
+    if location == "group"
       "#{@location[location].db}#{@groupCouch.view}#{view}"
     else
       "#{@location[location].db}#{@couch.view}#{view}"
 
   urlList  : ( location, list ) ->
-    if location == "group" || Tangerine.settings.get("context") == "server"
+    if location == "group"
       "#{@location[location].db}#{@groupCouch.list}#{list}"
     else
       "#{@location[location].db}#{@couch.list}#{list}"
 
   urlShow  : ( location, show ) ->
-    if location == "group" || Tangerine.settings.get("context") == "server"
+    if location == "group"
       "#{@location[location].db}#{@groupCouch.show}#{show}"
     else
       "#{@location[location].db}#{@couch.show}#{show}"
-  
+
   # these two are a little weird. I feel like subnetAddress should be a class with properties IP, URL and index
   urlSubnet: ( ip ) ->
     port   = @config.get "port"

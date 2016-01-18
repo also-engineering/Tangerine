@@ -6,27 +6,20 @@ class Result extends Backbone.Model
 
     # could use defaults but it messes things up
     if options.blank == true
-      device = device || Device || {}
-      deviceInfo =
-        'name'      : device.name
-        'platform'  : device.platform
-        'uuid'      : device.uuid
-        'version'   : device.version
-        'userAgent' : navigator.userAgent
 
       @set
-        'subtestData'       : []
-        'start_time'        : (new Date()).getTime()
-        'enumerator'        : Tangerine.user.name()
-        'tangerine_version' : Tangerine.version
-        'device'            : deviceInfo
-        'instanceId'        : Tangerine.settings.getString("instanceId")
+        'subtestData'      : []
+        'startTime'        : (new Date()).getTime()
+        'enumerator'       : Tangerine.user.name()
+        'tangerineVersion' : Tangerine.version
+        'device'           : navigator.userAgent
+        'instanceId'       : Tangerine.settings.getString 'instanceId'
 
       @unset "blank" # options automatically get added to the model. Lame.
 
   add: ( subtestDataElement, callbacks = {}) ->
     @setSubtestData subtestDataElement, callbacks
-    @save null, 
+    @save null,
       success: callbacks.success || $.noop
       error:   callbacks.error   || $.noop
 

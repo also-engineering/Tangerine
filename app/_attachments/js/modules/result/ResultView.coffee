@@ -18,29 +18,24 @@ class ResultView extends Backbone.View
         "comment" : @$el.find('#additional-comments').val() || ""
         "end_time" : (new Date()).getTime()
       subtestId : "result"
-      sum :
-        correct : 1
-        incorrect : 0
-        missing : 0
-        total : 1
+    ,
+      success: =>
+        Tangerine.activity = ""
+        Utils.midAlert @text.saved
+        @$el.find('.save_status').html @text.saved
+        @$el.find('.save_status').removeClass('not_saved')
+        @$el.find('.question').fadeOut(250)
 
-    if @model.save()
-      Tangerine.activity = ""
-      Utils.midAlert @text.saved
-      @$el.find('.save_status').html @text.saved
-      @$el.find('.save_status').removeClass('not_saved')
-      @$el.find('.question').fadeOut(250)
+        $button = @$el.find("button.save")
 
-      $button = @$el.find("button.save")
-
-      $button.removeClass('save').addClass('another').html @text.another
-    else
-      Utils.midAlert "Save error"
-      @$el.find('.save_status').html "Results may not have saved"
+        $button.removeClass('save').addClass('another').html @text.another
+      error: =>
+        Utils.midAlert "Save error"
+        @$el.find('.save_status').html "Results may not have saved"
 
 
   i18n: ->
-    @text = 
+    @text =
       "assessmentComplete" : t("ResultView.label.assessment_complete")
       "comments"           : t("ResultView.label.comments")
       "subtestsCompleted"  : t("ResultView.label.subtests_completed")
@@ -50,7 +45,7 @@ class ResultView extends Backbone.View
 
       "saved"              : t("ResultView.message.saved")
       "notSaved"           : t("ResultView.message.not_saved")
-      
+
 
   initialize: ( options ) ->
 
@@ -86,6 +81,6 @@ class ResultView extends Backbone.View
     @resultSumView.render()
 
     @trigger "rendered"
-    
+
   onClose: ->
     @resultSumView.close()

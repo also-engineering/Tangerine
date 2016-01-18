@@ -21,7 +21,7 @@ class TeachersView extends Backbone.View
 
     @usersByTeacherId = @users.indexBy("teacherId")
 
-    @teacherProperties = 
+    @teacherProperties =
       [
         {
           "key"      : "name"
@@ -91,28 +91,17 @@ class TeachersView extends Backbone.View
 
 
   render: ->
-
     teacherTable = @getTeacherTable()
+    deleteButton = "<button class='command_red delete'>Delete</button>"
 
-    deleteButton = if Tangerine.settings.get("context") == "server" then "<button class='command_red delete'>Delete</button>" else ""
-
-    backButton = "
-      <button class='navigation back'>#{t('back')}</button>
-    " unless Tangerine.settings.get("context") is "server"
-
-    html = "
-
-      #{backButton||''}
-
+    @$el.html "
       <h1>Teachers</h1>
 
       <div id='teacher_table_container'>
         #{teacherTable}
       </div>
-
     "
 
-    @$el.html html
     @trigger "rendered"
 
   updateTable: -> @$el.find("#teacher_table_container").html @getTeacherTable()
@@ -126,7 +115,7 @@ class TeachersView extends Backbone.View
       html += "
       <table class='class_table teachers #{teacher.id}' >
         <tbody>
-      "  
+      "
 
       for prop in @teacherProperties
         html += @propCookRow(prop, teacher)
@@ -159,7 +148,7 @@ class TeachersView extends Backbone.View
     if prop.headerless
       prop.tagName = "th"
     else
-      header = "<th>#{prop.label}</th>" 
+      header = "<th>#{prop.label}</th>"
 
     "<tr>#{header||""}#{@propCook(prop, teacher)}</tr>"
 
@@ -176,7 +165,7 @@ class TeachersView extends Backbone.View
     # what is it
     editOrNot   = if prop.editable then "edit_in_place" else ""
 
-    numberOrNot = if _.isNumber(value) then "data-isNumber='true'" else "data-isNumber='false'" 
+    numberOrNot = if _.isNumber(value) then "data-isNumber='true'" else "data-isNumber='false'"
 
     return "<#{tagName} class='#{editOrNot}'><span data-teacherId='#{teacher.id}' data-key='#{prop.key}' data-value='#{value}' #{editOrNot} #{numberOrNot}>#{value}</div></#{tagName}>"
 
@@ -207,8 +196,8 @@ class TeachersView extends Backbone.View
 
     teacherId    = $span.attr("data-teacherId")
     teacher      = @teachers.get(teacherId)
-    oldValue     = 
-      if isNumber 
+    oldValue     =
+      if isNumber
         teacher.getNumber(key)
       else
         teacher.getString(key)
@@ -270,16 +259,16 @@ class TeachersView extends Backbone.View
       teacher.save attributes,
         success: =>
           Utils.topAlert "Teacher saved"
-          teacher.fetch 
+          teacher.fetch
             success: =>
               @updateTable()
         error: =>
-          teacher.fetch 
+          teacher.fetch
             success: =>
               @updateTable()
               # ideally we wouldn't have to save this but conflicts happen sometimes
               # @TODO make the model try again when unsuccessful.
               alert "Please try to save again, it didn't work that time."
-    
+
     # this ensures we do not insert a newline character when we press enter
     return false
