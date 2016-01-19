@@ -28,6 +28,8 @@ fi
 # hand it over to the gulp file
 dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $dir
+npm install
+
 npm start init
 
 cd app
