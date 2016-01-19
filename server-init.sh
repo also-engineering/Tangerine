@@ -21,9 +21,14 @@ if [ ! -z "$which_couchapp" ]; then
 else
   sudo apt-get install python-dev -y
   curl -O https://bootstrap.pypa.io/get-pip.py
-  python get-pip.py
+  sudo python get-pip.py
   sudo pip install couchapp
 fi
 
 # hand it over to the gulp file
+dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd $dir
 npm start init
+
+cd app
+couchapp push
