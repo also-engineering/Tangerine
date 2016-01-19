@@ -25,6 +25,17 @@ else
   sudo pip install couchapp
 fi
 
+
+# node
+which_node=`which node`
+if [ ! -z "$which_node" ]; then
+  echo "node already installed"
+else
+  curl -sL https://deb.nodesource.com/setup_4.x | sudo -E bash -
+  sudo apt-get install -y nodejs
+fi
+
+
 # hand it over to the gulp file
 dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $dir
