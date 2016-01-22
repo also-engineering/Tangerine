@@ -41,6 +41,8 @@ dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $dir
 npm install
 
+sed "s/\INSERT_HOSTNAME/"$T_HOSTNAME"/g" app/_docs/configuration.template > app/_docs/configuration.json
+
 npm start init
 
 cd app

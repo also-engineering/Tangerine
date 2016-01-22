@@ -1,14 +1,8 @@
 [
-  ".*coffee$"
-, ".*map$"
-, ".*\\.min\\.js$"
-, "docs.*"
-, "tests.*"
-, ".*\\.DS_Store$"
-, ".*listen.rb$"
-, ".*couchapprc\\.sample$"
-, ".*\\.gitignore$"
-, ".*\\Gemfile$"
-, ".*\\Gemfile\\.lockfile$"
-, ".*\\testem\\.json$"
+  ".*coffee$",
+  "docs.*",
+  "tests.*",
+  ".*\\.DS_Store$",
+  ".*couchapprc\\.sample$",
+  ".*\\.gitignore$"
 ]

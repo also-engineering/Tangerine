@@ -3,13 +3,13 @@
 
 
    "local" : {
-      "host": "$T_HOSTNAME/db",
+      "host": "INSERT_HOSTNAME/db",
       "dbName" : "tangerine"
    },
 
    "update" : {
       "dbName" : "update",
-      "host"   : "$T_HOSTNAME/db",
+      "host"   : "INSERT_HOSTNAME/db",
       "login"  : ""
    },
 
@@ -19,14 +19,14 @@
 
    "trunk" : {
       "dbName" : "tangerine",
-      "host" : "$T_HOSTNAME/db"
+      "host" : "INSERT_HOSTNAME/db"
    },
 
    "groupDBPrefix" : "group-",
    "port" : 5984,
 
-   "tree"    : "http://$T_HOSTNAME/tree",
-   "robbert" : "http://$T_HOSTNAME/robbert",
+   "tree"    : "http://INSERT_HOSTNAME/tree",
+   "robbert" : "http://INSERT_HOSTNAME/robbert",
 
    "defaults" : {
       "settings" : {
@@ -34,7 +34,7 @@
          "language" : "en-US",
          "log" : [""],
          "groupName" : "",
-         "groupHost" : "http://$T_HOSTNAME/db",
+         "groupHost" : "http://INSERT_HOSTNAME/db",
          "upPass" : "pass"
       }
    },
