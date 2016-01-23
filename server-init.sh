@@ -20,8 +20,8 @@ if [ ! -z "$which_couchapp" ]; then
   echo "couchapp already installed"
 else
   sudo apt-get install python-dev -y
-  curl -O https://bootstrap.pypa.io/get-pip.py
-  sudo python get-pip.py
+  curl https://bootstrap.pypa.io/get-pip.py > tmp/get-pip.py
+  sudo python tmp/get-pip.py
   sudo pip install couchapp
 fi
 
