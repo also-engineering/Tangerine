@@ -1,4 +1,5 @@
 # editor
+#!/usr/bin/env bash -v
 
 # apt-get update
 if ! $updated_recently; then
