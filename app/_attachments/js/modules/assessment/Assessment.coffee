@@ -294,7 +294,7 @@ class Assessment extends Backbone.Model
       type: "POST"
       contentType: "application/json; charset=UTF-8"
       dataType: "json"
-      url: "/#{Tangerine.db_name}/_design/#{Tangerine.design_doc}/_view/byParentId"
+      url: "/db/#{Tangerine.db_name}/_design/#{Tangerine.design_doc}/_view/byParentId"
       data: JSON.stringify({ keys : ["s#{@id}","q#{@id}","a#{@id}"] })
       error: (xhr, status, err) ->
         Utils.midAlert "Delete error: 01";
