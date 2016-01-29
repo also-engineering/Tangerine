@@ -61,6 +61,10 @@
    ],
 
    "prototypeViews" : {
+      "caseSearch" : {
+         "run" : "CaseSearchRunView",
+         "edit" : "CaseSearchEditView"
+      },
       "grid" : {
          "run" : "GridRunView",
          "edit" : "GridEditView"

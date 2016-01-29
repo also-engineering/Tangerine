@@ -277,6 +277,9 @@ conf.fileOrder = [
   'LocationRunView',
   'LocationEditView',
 
+  'CaseSearchRunView',
+  'CaseSearchEditView',
+
   'SurveyRunView',
   'SurveyEditView',
 

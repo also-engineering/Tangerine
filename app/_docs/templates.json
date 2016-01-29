@@ -8,6 +8,9 @@
       "skippable"         : false
   },
   "prototypes" : {
+    "caseSearch" : {
+      "prototype" : "caseSearch"
+    },
     "grid" : {
       "prototype" : "grid",
       "items" : [],
@@ -46,9 +49,11 @@
   },
 
   "subtestTemplates" : {
-    "gps":
-    {
+    "gps": {
       "GPS Coordinates": {}
+    },
+    "caseSearch": {
+      "Case search": {}
     },
     "consent" : {
       "Consent Screen": {}
