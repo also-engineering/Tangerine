@@ -483,8 +483,8 @@ class GridRunView extends Backbone.View
 
     @$el.html html
 
-    @modeButton.setElement @$el.find ".mode-button"
-    @modeButton.render()
+    @modeButton?.setElement @$el.find ".mode-button"
+    @modeButton?.render()
 
     @trigger "rendered"
     @trigger "ready"
