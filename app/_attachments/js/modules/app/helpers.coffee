@@ -89,6 +89,12 @@ Backbone.Model.prototype.prune = ( shape = {} ) ->
   for key, value of @attributes
     @unset(key) unless key in standard
 
+# proxy the save method
+Backbone.Model.prototype.originalSave = Backbone.Model.prototype.save;
+Backbone.Model.prototype.save = ->
+  @_beforeSave()
+  @originalSave.apply(@, arguments)
+
 # hash the attributes of a model
 Backbone.Model.prototype.toHash = ->
   significantAttributes = {}
