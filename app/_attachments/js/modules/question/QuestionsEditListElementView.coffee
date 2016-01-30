@@ -31,7 +31,7 @@ class QuestionsEditListElementView extends Backbone.View
       "dataType"    : "json"
       "contentType" : "application/json"
       "data"        : JSON.stringify
-        keys : ["q#{@question.get("assessmentId")}"]
+        keys : ["s#{@question.get("assessmentId")}"]
       "success" : (data) =>
         subtests = _.compact((row.doc if row.doc.prototype is "survey") for row in data.rows)
         @populateSurveySelect subtests

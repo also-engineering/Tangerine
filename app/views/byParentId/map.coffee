@@ -6,8 +6,6 @@
 
   if doc.collection is 'question'
 
-    emit 'q' + doc.assessmentId, null
-
     emit 'q' + doc.subtestId, null
 
     emit 'q' + id, rev
