@@ -23,8 +23,7 @@ class QuestionsEditListElementView extends Backbone.View
 
   getSurveys: =>
 
-    url = 
-      Tangerine.settings.urlView("group", "subtestsByAssessmentId")
+    url = Tangerine.settings.urlView("group", "byParentId")
 
     $.ajax
       "url"         : url
@@ -32,7 +31,7 @@ class QuestionsEditListElementView extends Backbone.View
       "dataType"    : "json"
       "contentType" : "application/json"
       "data"        : JSON.stringify
-        keys : [@question.get("assessmentId")]
+        keys : ["q#{@question.get("assessmentId")}"]
       "success" : (data) =>
         subtests = _.compact((row.value if row.value.prototype == "survey") for row in data.rows)
         console.log subtests

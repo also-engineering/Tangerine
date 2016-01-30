@@ -92,7 +92,7 @@ class CaseSearchRunView extends Backbone.View
       <table>
         #{@fields.map( (field,i) -> "<tr><th style='text-align:left'>#{field.underscore().humanize()}</th><td><input id='field-#{i}' data-field='#{i}'></td></tr>" ).join('')}
       </table>
-      <
+
       <table id='search-results'>
       </table>
     "
