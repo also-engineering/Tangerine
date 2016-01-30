@@ -50,7 +50,7 @@ class QuestionsEditListElementView extends Backbone.View
     if subtestId == "cancel"
       @$el.find(".copy_container").empty()
       return
-    newQuestion = @question.clone()
+    newQuestion = new Question @question.attributes # tad dangerous, but ok since we leave this page immediately
     newQuestion.save
       "_id"       : Utils.guid()
       "subtestId" : subtestId
@@ -58,7 +58,7 @@ class QuestionsEditListElementView extends Backbone.View
       success: =>
         if subtestId == @question.get("subtestId")
           Utils.midAlert("Question duplicated")
-          @trigger "duplicate" 
+          @trigger "duplicate"
         else
           Tangerine.router.navigate "subtest/#{subtestId}", true # this will guarantee that it assures the order of the target subtest
           Utils.midAlert("Question copied to #{$target.html()}")
@@ -79,7 +79,7 @@ class QuestionsEditListElementView extends Backbone.View
     return false
 
   initialize: ( options ) ->
-    @text = 
+    @text =
       "edit"          : t("QuestionsEditListElementView.help.edit")
       "delete"        : t("QuestionsEditListElementView.help.delete")
       "copy"          : t("QuestionsEditListElementView.help.copy_to")
@@ -101,7 +101,7 @@ class QuestionsEditListElementView extends Backbone.View
           </td>
           <td>
             <span>#{@question.get 'prompt'}</span> <span>[<small>#{@question.get 'name'}, #{@question.get 'type'}</small>]</span>
-            
+
             <img src='images/icon_edit.png' width='36' height='36' class='link_icon edit' title='#{@text.edit}'>
             <img src='images/icon_copy_to.png' width='36' height='36' class='link_icon show_copy' title='#{@text.copy}'>
             <span class='copy_container'></span>
