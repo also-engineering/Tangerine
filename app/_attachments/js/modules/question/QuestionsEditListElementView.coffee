@@ -23,7 +23,7 @@ class QuestionsEditListElementView extends Backbone.View
 
   getSurveys: =>
 
-    url = Tangerine.settings.urlView("group", "byParentId")
+    url = Tangerine.settings.urlView("group", "byParentId?include_docs=true")
 
     $.ajax
       "url"         : url
@@ -32,13 +32,12 @@ class QuestionsEditListElementView extends Backbone.View
       "contentType" : "application/json"
       "data"        : JSON.stringify
         keys : ["q#{@question.get("assessmentId")}"]
-        include_docs  :true
       "success" : (data) =>
         subtests = _.compact((row.doc if row.doc.prototype is "survey") for row in data.rows)
         @populateSurveySelect subtests
 
   populateSurveySelect : (subtests) ->
-    
+
     subtests.push    _id : 'cancel', name : @text.cancel_button
     subtests.unshift _id : '',       name : @text.select
 
