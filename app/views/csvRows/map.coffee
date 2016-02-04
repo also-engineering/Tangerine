@@ -49,23 +49,17 @@ The only real behavior worth mentioning here is
   ###
 
   if isClassResult
-    result.push cell "universal", "studentId",  doc.studentId
+    result.push cell "universal", "student_id",  doc.studentId
   else
     result.push cell "universal", "enumerator", doc.enumerator
     result.push cell "universal", "start_time", doc.startTime || ''
-    result.push cell "universal", "order_map",  (doc.order_map || []).join(",")
+    result.push cell "universal", "order_map",  (doc.orderMap || []).join(",")
 
 
   datetimeCount = 0;
   linearOrder = subtestData.map (el, i) -> return i
 
   orderMap = doc.orderMap
-
-  # delete this when standardized
-  if typeof orderMap == "undefined" then orderMap = doc.order_map
-  if typeof orderMap == "undefined"
-    orderMap = linearOrder
-  # end delete
 
   timestamps = []
 

@@ -456,9 +456,9 @@ class Router extends Backbone.Router
                 view = new AssessmentRunView
                   model: assessment
 
-                if result.has("order_map")
+                if result.has("orderMap")
                   # save the order map of previous randomization
-                  orderMap = result.get("order_map").slice() # clone array
+                  orderMap = result.get("orderMap").slice() # clone array
                   # restore the previous ordermap
                   view.orderMap = orderMap
 

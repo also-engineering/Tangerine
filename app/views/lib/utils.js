@@ -30,7 +30,7 @@ translatedSurveyValue = function(databaseValue) {
 
 cell = function(subtest, key, value) {
   var idValue, machineName;
-  idValue = subtest.subtestId || String(subtest);
+  idValue = (subtest.subtestId || String(subtest)).substr(-3);
   machineName = idValue + "-" + key;
   return {
     k: key,

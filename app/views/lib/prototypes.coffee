@@ -4,12 +4,6 @@ cell  = utils.cell
 translatedGridValue   = utils.translatedGridValue
 translatedSurveyValue = utils.translatedSurveyValue
 
-cGrid =
-  CORRECT : "C"
-  INCORRECT : "I"
-  MISSING : "M"
-  SKIPPED : "S"
-
 cellsLocation = ( subtest ) ->
   row = []
   for label, i in subtest.data.labels
@@ -46,17 +40,11 @@ cellsGrid = ( subtest, isClass ) ->
   row.push cell( subtest, "#{variableName}_time_intermediate_captured", subtest.data.time_intermediate_captured)
 
   for item, i in subtest.data.items
-    if isClass == true
-      letterLabel = "#{i+1}_#{item.itemLabel}"
-    else
-      letterLabel = "#{variableName}_#{i+1}"
+    letterLabel = "#{variableName}_#{i+1}"
 
     row.push cell( subtest, letterLabel, translatedGridValue( item.itemResult ) )
 
   row.push cell( subtest, "#{variableName}_time_allowed",     subtest.data.time_allowed )
-
-
-
 
   return row
 
@@ -69,7 +57,6 @@ cellsSurvey = ( subtest ) ->
     else # single type question or open
       row.push cell( subtest, surveyVariable, translatedSurveyValue(surveyValue)) # if open just show result, otherwise translate not_asked
   return row
-
 
 cellsGps = (subtest) ->
   row = []
