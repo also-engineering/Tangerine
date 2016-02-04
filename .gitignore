@@ -1,6 +1,9 @@
 .DS_store
 tmp/
 
+# compiled file
+css/tangerine.css
+
 node_modules
 
 _docs/configuration.json

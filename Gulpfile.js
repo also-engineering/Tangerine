@@ -91,7 +91,7 @@ gulp.task('build:js', ['version'], function() {
 
 
 // Minify Javascript
-gulp.task('minify:js', ['build:js', 'version'], function() {
+gulp.task('minify:js', ['build:js'], function() {
 
   return gulp.src(conf.jsGlob)
     .pipe(sourcemaps.init({loadMaps: true})) // pass along old sourcemaps
@@ -183,8 +183,10 @@ gulp.task('version', function(cb) {
 gulp.task('build:less', function () {
   return gulp.src(conf.lessFile)
     .pipe(less())                      // compile less
-    .pipe(gulp.dest(conf.cssDir));     // output directory
-
+    .pipe(gulp.dest(conf.cssDir))      // output directory
+      .on('end', function() {
+        push();
+      });
 });
 
 
