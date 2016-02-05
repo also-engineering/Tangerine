@@ -243,7 +243,7 @@ class SurveyRunView extends Backbone.View
 
   getSkipped: ->
     result = {}
-    result[@questions.models[i].get("name")] = "skipped" for qv, i in @questionViews
+    result[@questions.models[i].get("name")] = QuestionRunView.c.SKIPPED for qv, i in @questionViews
     return result
 
   getResult: =>

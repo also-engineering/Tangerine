@@ -2,6 +2,15 @@ class QuestionRunView extends Backbone.View
 
   className: "question"
 
+  c:
+    CHECKED   : "C"
+    UNCHECKED : "U"
+    SKIPPED   : "S"
+    NOT_ASKED : "N"
+    MISSING   : "M"
+    LOGIC_SKIPPED : "L"
+    NOT_ASKED_AUTOSTOP : "A"
+
   events:
     'change input'           : 'update'
     'change textarea'        : 'update'
@@ -16,7 +25,7 @@ class QuestionRunView extends Backbone.View
     @parent    = options.parent
     @dataEntry = options.dataEntry
     @fontFamily = @parent.model.get('fontFamily')
-    @fontStyle = "style=\"font-family: #{@parent.model.get('fontFamily')} !important;\"" if @parent.model.get("fontFamily") != "" 
+    @fontStyle = "style=\"font-family: #{@parent.model.get('fontFamily')} !important;\"" if @parent.model.get("fontFamily") != ""
 
     unless @dataEntry
       @answer = options.answer
@@ -37,7 +46,7 @@ class QuestionRunView extends Backbone.View
     else
       @isValid = false
       @skipped = false
-    
+
     if @notAsked == true
       @isValid = true
       @updateResult()
@@ -109,12 +118,12 @@ class QuestionRunView extends Backbone.View
         catch e
           alert "Custom Validation error\n\n#{e}"
       else
-        @isValid = 
+        @isValid =
           switch @type
             when "open"
               if _.isEmptyString(@answer) || (_.isEmpty(@answer) && _.isObject(@answer)) then false else true # don't use isEmpty here
             when "multiple"
-              if ~_.values(@answer).indexOf("checked") then true  else false
+              if ~_.values(@answer).indexOf(@c.CHECKED) then true  else false
             when "single"
               if _.isEmptyString(@answer) || (_.isEmpty(@answer) && _.isObject(@answer)) then false else true
 
@@ -185,9 +194,9 @@ class QuestionRunView extends Backbone.View
     else
       @$el.hide()
       @trigger "rendered"
-  
+
   defineSpecialCaseResults: ->
-    list = ["missing", "notAsked", "skipped", "logicSkipped", "notAskedAutostop"]
+    list = [@c.MISSING, @c.NOT_ASKED, @c.SKIPPED, @c.LOGIC_SKIPPED, @c.NOT_ASKED_AUTOSTOP]
     for element in list
       if @type == "single" || @type == "open"
         @[element+"Result"] = element

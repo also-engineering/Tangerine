@@ -25,7 +25,7 @@ cellsDatetime = ( subtest, datetimeSuffix ) ->
   row.push cell( subtest, "assess_time#{datetimeSuffix}", subtest.data.time)
   return row
 
-cellsGrid = ( subtest, isClass ) ->
+cellsGrid = ( subtest ) ->
   row = []
 
   variableName = subtest.data.variable_name

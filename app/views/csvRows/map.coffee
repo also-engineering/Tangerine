@@ -13,7 +13,7 @@ The only real behavior worth mentioning here is
 
   utils = require("views/lib/utils")
 
-  cell        = utils.cell
+  cell = utils.cell
 
   prototypes  = require("views/lib/prototypes")
 
@@ -25,35 +25,16 @@ The only real behavior worth mentioning here is
 
   subtestData = doc.subtestData
 
-  isClassResult = typeof doc.klassId isnt "undefined"
-
-  # turn class results into regular results
-  if isClassResult
-
-    newData               = clone(doc.subtestData)
-    newData.subtestId     = doc.subtestId
-
-    newData.time_allowed  = doc.timeAllowed
-
-    subtestData = [ {
-      data      : newData
-      prototype : doc.prototype
-      subtestId : doc.subtestId
-    } ]
-
-
   result = []
 
   ###
   Handle universal fields first
   ###
 
-  if isClassResult
-    result.push cell "universal", "student_id",  doc.studentId
-  else
-    result.push cell "universal", "enumerator", doc.enumerator
-    result.push cell "universal", "start_time", doc.startTime || ''
-    result.push cell "universal", "order_map",  (doc.orderMap || []).join(",")
+
+  result.push cell "universal", "enumerator", doc.enumerator
+  result.push cell "universal", "start_time", doc.startTime || ''
+  result.push cell "universal", "order_map",  (doc.orderMap || []).join(",")
 
 
   datetimeCount = 0;
@@ -107,13 +88,10 @@ The only real behavior worth mentioning here is
       result = result.concat cellsLocation subtest
 
     else if prototype == "grid"
-      result = result.concat cellsGrid subtest, isClassResult
+      result = result.concat cellsGrid subtest
 
     else if prototype == "survey"
       result = result.concat cellsSurvey subtest
-
-    else if prototype == "observation"
-      result = result.concat cellsObservation subtest
 
     else if prototype == "gps"
       result = result.concat cellsGps subtest
@@ -124,10 +102,6 @@ The only real behavior worth mentioning here is
   for timestamp, i in timestamps
     result.push cell("timestamp_" + i, "timestamp_" + i, timestamp)
 
-  keyId =
-    if isClassResult
-      doc.klassId
-    else
-      doc._id
+  keyId = doc._id
 
   emit keyId, result

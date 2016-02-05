@@ -2,6 +2,12 @@ class GridRunView extends Backbone.View
 
   className: "grid_prototype"
 
+  c:
+    CORRECT   : "C"
+    INCORRECT : "I"
+    MISSING   : "M"
+    SKIPPED   : "S"
+
   events: if Modernizr.touch then {
     'click .grid_element'     : 'gridClick' #click
     'click .end_of_grid_line' : 'endOfGridLineClick' #click
@@ -32,15 +38,16 @@ class GridRunView extends Backbone.View
     $target = $(event.target)
     index = $target.attr('data-index')
 
-    indexIsntBelowLastAttempted = parseInt(index) > parseInt(@lastAttempted)
-    lastAttemptedIsntZero       = parseInt(@lastAttempted) != 0
-    correctionsDisabled         = @dataEntry is false and @parent?.parent?.enableCorrections is false
+    clickPastLastAttempted = parseInt(index) > parseInt(@lastAttempted)
+    lastAttemptedIsntZero  = parseInt(@lastAttempted) != 0
+    return if lastAttemptedIsntZero && clickPastLastAttempted
 
-    return if correctionsDisabled && lastAttemptedIsntZero && indexIsntBelowLastAttempted
+    notDataEntry = @dataEntry is false
+    correctionsDisabled = @parent?.parent?.enableCorrections is false
+    return if correctionsDisabled && notDataEntry
 
     @markElement(index)
     @checkAutostop() if @autostop != 0
-
 
   intermediateItemHandler: (event) =>
     @timeIntermediateCaptured = @getTime() - @startTime
@@ -56,7 +63,7 @@ class GridRunView extends Backbone.View
     if @timeRunning
       autoCount = 0
       for i in [0..@autostop-1]
-        if @gridOutput[i] == "correct" then break
+        if @gridOutput[i] == @c.CORRECT then break
         autoCount++
       if @autostopped == false
         if autoCount == @autostop then @autostopTest()
@@ -65,12 +72,14 @@ class GridRunView extends Backbone.View
         # mode is used for operations like pre-populating the grid when doing corrections.
   markElement: (index, value = null, mode) ->
     # if last attempted has been set, and the click is above it, then cancel
-    
-    correctionsDisabled         = @dataEntry is false and @parent?.parent?.enableCorrections? and @parent?.parent?.enableCorrections is false
-    lastAttemptedIsntZero       = parseInt(@lastAttempted) != 0
-    indexIsntBelowLastAttempted = parseInt(index) > parseInt(@lastAttempted)
 
-    return if correctionsDisabled and lastAttemptedIsntZero and indexIsntBelowLastAttempted
+    clickPastLastAttempted = parseInt(index) > parseInt(@lastAttempted)
+    lastAttemptedIsntZero  = parseInt(@lastAttempted) != 0
+    return if lastAttemptedIsntZero && clickPastLastAttempted
+
+    notDataEntry = @dataEntry is false
+    correctionsDisabled = @parent?.parent?.enableCorrections is false
+    return if correctionsDisabled && notDataEntry
 
     $target = @$el.find(".grid_element[data-index=#{index}]")
     if mode != 'populate'
@@ -78,13 +87,13 @@ class GridRunView extends Backbone.View
 
     if not @autostopped
       if value == null # not specifying the value, just toggle
-        @gridOutput[index-1] = if (@gridOutput[index-1] == "correct") then "incorrect" else "correct"
+        @gridOutput[index-1] = if (@gridOutput[index-1] == @c.CORRECT) then @c.INCORRECT else @c.CORRECT
         $target.toggleClass "element_wrong"
       else # value specified
         @gridOutput[index-1] = value
-        if value == "incorrect"
+        if value == @c.INCORRECT
           $target.addClass "element_wrong"
-        else if value == "correct"
+        else if value == @c.CORRECT
           $target.removeClass "element_wrong"
 
   endOfGridLineClick: (event) ->
@@ -98,13 +107,13 @@ class GridRunView extends Backbone.View
         $target.removeClass "element_wrong"
         index = $target.attr('data-index')
         for i in [index..(index-(@columns-1))]
-          @markElement i, "correct"
+          @markElement i, @c.CORRECT
       else if !$target.hasClass("element_wrong") && !@autostopped
         # NO, mark it wrong
         $target.addClass "element_wrong"
         index = $target.attr('data-index')
         for i in [index..(index-(@columns-1))]
-          @markElement i, "incorrect"
+          @markElement i, @c.INCORRECT
 
       @checkAutostop() if @autostop != 0
 
@@ -115,7 +124,7 @@ class GridRunView extends Backbone.View
       $target = $(event.target)
       index   = $target.attr('data-index')
 
-    if index - 1 >= @gridOutput.lastIndexOf("incorrect")
+    if index - 1 >= @gridOutput.lastIndexOf(@c.INCORRECT)
       @$el.find(".element_last").removeClass "element_last"
       $target.addClass "element_last"
       @lastAttempted = index
@@ -187,7 +196,7 @@ class GridRunView extends Backbone.View
 
     @$el.find(".timer").html @timeRemaining
 
-    if @timeRunning is true and @captureLastAttempted and @timeRemaining <= 0 
+    if @timeRunning is true and @captureLastAttempted and @timeRemaining <= 0
         @stopTimer(simpleStop:true)
         Utils.background "red"
         _.delay(
@@ -261,12 +270,12 @@ class GridRunView extends Backbone.View
         @itemMap[temp] = @itemMap[i]
         @itemMap[i] = tempValue
       , @
-      
+
       @itemMap.forEach (item, i) ->
         @mapItem[@itemMap[i]] = i
       , @
     else
-      @items.forEach (item, i) -> 
+      @items.forEach (item, i) ->
         @itemMap[i] = i
         @mapItem[i] = i
       , @
@@ -278,7 +287,7 @@ class GridRunView extends Backbone.View
 
     @mode = "mark" if @dataEntry
 
-    @gridOutput = @items.map -> 'correct'
+    @gridOutput = @items.map (-> @c.CORRECT), @
 
     @columns  = parseInt(@model.get("columns")) || 3
 
@@ -332,7 +341,7 @@ class GridRunView extends Backbone.View
 
     @i18n()
 
-    @fontStyle = "style=\"font-family: #{@model.get('fontFamily')} !important;\"" if @model.get("fontFamily") != "" 
+    @fontStyle = "style=\"font-family: #{@model.get('fontFamily')} !important;\"" if @model.get("fontFamily") != ""
 
     @captureAfterSeconds  = if @model.has("captureAfterSeconds")  then @model.get("captureAfterSeconds")  else 0
     @captureItemAtTime    = if @model.has("captureItemAtTime")    then @model.get("captureItemAtTime")    else false
@@ -348,7 +357,7 @@ class GridRunView extends Backbone.View
       fontSizeClass = ""
 
     @rtl = @model.getBoolean "rtl"
-    @$el.addClass "rtl-grid" if @rtl 
+    @$el.addClass "rtl-grid" if @rtl
 
     @totalTime = @model.get("timer") || 0
 
@@ -490,7 +499,7 @@ class GridRunView extends Backbone.View
     @trigger "ready"
 
     unless @dataEntry
-      
+
       # class doesn't have this heirarchy
       if @parent? and @parent.parent? and @parent.parent.result?
 
@@ -563,7 +572,7 @@ class GridRunView extends Backbone.View
           itemLabel  : item
       else
         itemResults[i] =
-          itemResult : "missing"
+          itemResult : @c.MISSING
           itemLabel : @items[@mapItem[i]]
 
     @lastAttempted = false if not @captureLastAttempted
@@ -593,19 +602,19 @@ class GridRunView extends Backbone.View
 
     for item, i in @items
       itemResults[i] =
-        itemResult : "skipped"
+        itemResult : @c.SKIPPED
         itemLabel  : item
 
     result =
-      "capture_last_attempted"     : "skipped"
-      "item_at_time"               : "skipped"
-      "time_intermediate_captured" : "skipped"
-      "capture_item_at_time"       : "skipped"
-      "auto_stop"     : "skipped"
-      "attempted"     : "skipped"
+      "capture_last_attempted"     : @c.SKIPPED
+      "item_at_time"               : @c.SKIPPED
+      "time_intermediate_captured" : @c.SKIPPED
+      "capture_item_at_time"       : @c.SKIPPED
+      "auto_stop"     : @c.SKIPPED
+      "attempted"     : @c.SKIPPED
       "items"         : itemResults
-      "time_remain"   : "skipped"
-      "mark_record"   : "skipped"
+      "time_remain"   : @c.SKIPPED
+      "mark_record"   : @c.SKIPPED
       "variable_name" : @model.get("variableName")
 
   onClose: ->
