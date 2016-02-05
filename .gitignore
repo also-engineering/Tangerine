@@ -2,7 +2,7 @@
 tmp/
 
 # compiled file
-css/tangerine.css
+tangerine.css
 
 node_modules
 
