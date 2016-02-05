@@ -39,14 +39,16 @@ Tangerine.locales["fr"] =
         "page" : "Page"
         "per_page" : "par page"
       "button" :
+        "resume" : "Reprendre"
         "refresh" : "Actualiser"
         "detect"  : "Identifier possibilités"
+      "message" :
+        "no_results" : "Pas encore de résultats !"
 
     "ResultSumView" :
       "button" :
         "resume" : "Reprendre"
-      "message" :
-        "no_results" : "Pas encore de résultats !"
+
     "SettingsView" :
       "message" :
         "warning" : "Please be careful with the following settings."
