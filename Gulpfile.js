@@ -282,6 +282,12 @@ conf.fileOrder = [
   'CaseSearchRunView',
   'CaseSearchEditView',
 
+  'CaseSelectRunView',
+  'CaseSelectEditView',
+
+  'Case',
+  'Cases',
+
   'SurveyRunView',
   'SurveyEditView',
 

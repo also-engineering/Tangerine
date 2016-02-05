@@ -1,91 +1,88 @@
 class CaseSearchEditView extends Backbone.View
 
-  className: "LocationEditView"
+  className: "CaseSelectEditView"
 
   events:
     'keyup #case-data'              : 'updateCaseData'
     'keyup #fields'                 : 'updateFields'
-    'click #case-data-format input' : 'updateCaseData'
-    'click #fields-format input'    : 'updateFields'
+    'keyup #visible-fields'         : 'updateVisibleFields'
 
+    'click #case-data-format input'      : 'updateCaseData'
+    'click #fields-format input'         : 'updateFields'
+    'click #visible-fields-format input' : 'updateVisibleFields'
+
+  updateCommaTabDisplay: (event, selector) ->
+    value     = @$el.find(selector).val()
+    hasTabs   = value.match(/\t/g)?
+
+    if event?.type == "click"
+      if $(event.target).val() == "Tabs"
+        @commaToTab selector
+        hasTabs   = true
+      else
+        @tabToComma selector
+        hasTabs   = false
+
+    if hasTabs
+      @$el.find("#{selector}-format :radio[value='Tabs']").attr("checked", "checked").button("refresh")
+    else
+      @$el.find("#{selector}-format :radio[value='Commas']").attr("checked", "checked").button("refresh")
 
   updateCaseData: (event) ->
-    if event?.type == "click"
-      if $(event.target).val() == "Tabs"
-        @caseDataCommaToTab()
-        hasTabs   = true
-        hasCommas = false
-      else
-        @caseDataTabToComma()
-        hasTabs   = false
-        hasCommas = true
-
-    else
-      caseData = @$el.find("#case-data").val()
-      hasTabs = caseData.match(/\t/g)?
-      hasCommas = caseData.match(/,/g)?
-
-    if hasTabs
-      @$el.find("#case-data-format :radio[value='Tabs']").attr("checked", "checked").button("refresh")
-    else
-      @$el.find("#case-data-format :radio[value='Commas']").attr("checked", "checked").button("refresh")
+    @updateCommaTabDisplay event, "#case-data"
 
   updateFields: (event) ->
-    if event?.type == "click"
-      if $(event.target).val() == "Tabs"
-        @fieldsCommaToTab()
-        hasTabs   = true
-        hasCommas = false
-      else
-        @fieldsTabToComma()
-        hasTabs   = false
-        hasCommas = true
+    @updateCommaTabDisplay event, "#fields"
 
-    else
-      fields    = @$el.find("#fields").val()
-      hasTabs   = fields.match(/\t/g)?
-      hasCommas = fields.match(/,/g)?
-
-    fields = @$el.find("#fields").val()
-    hasTabs   = fields.match(/\t/g)?
-    hasCommas = fields.match(/,/g)?
-    if hasTabs
-      @$el.find("#fields-format :radio[value='Tabs']").attr("checked", "checked").button("refresh")
-    else
-      @$el.find("#fields-format :radio[value='Commas']").attr("checked", "checked").button("refresh")
+  updateVisibleFields: (event) ->
+    @updateCommaTabDisplay event, "#visible-fields"
 
 
-  caseDataTabToComma: -> @$el.find("#case-data").val(String(@$el.find("#case-data").val()).replace(/\t/g,", "))
-  caseDataCommaToTab: -> @$el.find("#case-data").val(@$el.find("#case-data").val().replace(/, */g, "\t"))
-  fieldsTabToComma: -> @$el.find("#fields").val(String(@$el.find("#fields").val()).replace(/\t/g,", "))
-  fieldsCommaToTab: -> @$el.find("#fields").val(@$el.find("#fields").val().replace(/, */g, "\t"))
+  tabToComma: (selector) -> @$el.find(selector).val(String(@$el.find(selector).val()).replace(/\t/g,", "))
+  commaToTab: (selector) -> @$el.find(selector).val(@$el.find(selector).val().replace(/, */g, "\t"))
+
+
 
   save: ->
+
     if @$el.find("#case-data").val().match(/\t/g)?
       @$el.find("#case-data-format :radio[value='Tabs']").attr("checked", "checked").button("refresh")
       @caseDataTabToComma()
+
     if @$el.find("#fields").val().match(/\t/g)?
       @fieldsTabToComma()
       @$el.find("#fields-format :radio[value='Tabs']").attr("checked", "checked").button("refresh")
 
+    if @$el.find("#visible-fields").val().match(/\t/g)?
+      @visibleFieldsTabToComma()
+      @$el.find("#visible-fields-format :radio[value='Tabs']").attr("checked", "checked").button("refresh")
+
     fields = @$el.find("#fields").val().split(/, */g)
-    for level, i in fields
-      fields[i] = $.trim(level).replace(/[^a-zA-Z0-9']/g,"")
+    for field, i in fields
+      fields[i] = $.trim(field).replace(/[^a-zA-Z0-9']/g,"")
 
-    # removes /\s/
+    visibleFields = @$el.find("#visible-fields").val().split(/, */g)
+    for visibleField, i in visibleFields
+      visibleFields[i] = $.trim(visibleField).replace(/[^a-zA-Z0-9']/g,"")
+
+    # removes leading and trailng /\s/
     caseDataValue = $.trim(@$el.find("#case-data").val())
-
     caseData = caseDataValue.split("\n")
 
     for caseDatum, i in caseData
       caseData[i] = caseDatum.split(/, */g)
 
     @model.set
-      "fields"    : fields
-      "caseData" : caseData
+      "fields"        : fields
+      "caseData"      : caseData
+      "visibleFields" : visibleFields
 
   isValid: ->
-    fields = @model.get("fields")
+    visibleFields = @model.get 'visibleFields'
+    fields        = @model.get 'fields'
+    visibleFields.forEach (oneField) =>
+      @errors.push 'unknown_visible_field' if fields.indexOf(oneField) == -1
+
     for caseDatum in @model.get("caseData")
       if caseDatum.length != fields.length
         @errors.push "column_match" unless "column_match" in @errors
@@ -98,19 +95,23 @@ class CaseSearchEditView extends Backbone.View
     alert alertText
     @errors = []
 
+  errorMessages :
+      "column_match"          : "Some columns in the caseDatum data do not match the number of columns in the geographic levels."
+      'unknown_visible_field' : "Visible field not found in fields."
+
   initialize: ( options ) ->
     @errors = []
     @model = options.model
-    @errorMessages =
-      "column_match" : "Some columns in the caseDatum data do not match the number of columns in the geographic levels."
 
   render: ->
-    fields = @model.get("fields") || []
-    caseData  = @model.get("caseData")  || []
+    fields         = @model.getArray("fields")
+    visibleFields  = @model.getArray("visibleFields")
+    caseData       = @model.getArray("caseData")
 
-    fields = _.escape(fields.join(", "))
+    fields        = _.escape(fields.join(", "))
+    visibleFields = _.escape(visibleFields.join(", "))
+    caseData      = caseData.join("\n")
 
-    caseData = caseData.join("\n")
     if _.isArray(caseData)
       for caseDatum, i in caseData
         caseData[i] = _.escape(caseDatum.join(", "))
@@ -118,9 +119,9 @@ class CaseSearchEditView extends Backbone.View
     @$el.html  "
       <div class='label_value'>
         <div class='menu_box'>
-          <label for='fields' title='This is a comma separated list of geographic fields. (E.g. Country, Province, District, School Id) These are the fields that you would consider individual fields on the caseDatum form.'>Case Fields</label>
+          <label for='fields'>Case Fields</label>
           <input id='fields' value='#{fields}'>
-          <label title='Tangerine uses comma separated values. If you copy and paste from another program like Excel, the values will be tab separated. These buttons allow you to switch back and forth, however, Tangerine will always save the comma version.'>Format</label><br>
+          <label>Format</label><br>
           <div id='fields-format' class='buttonset'>
             <label for='fields-tabs'>Tabs</label>
             <input id='fields-tabs' name='fields-format' type='radio' value='Tabs'>
@@ -128,8 +129,22 @@ class CaseSearchEditView extends Backbone.View
             <input id='fields-commas' name='fields-format' type='radio' value='Commas'>
           </div>
         </div>
-
       </div>
+
+      <div class='label_value'>
+        <div class='menu_box'>
+          <label for='visible-fields'>Visible Fields</label>
+          <input id='visible-fields' value='#{visibleFields}'>
+          <label>Format</label><br>
+          <div id='visible-fields-format' class='buttonset'>
+            <label for='visible-fields-tabs'>Tabs</label>
+            <input id='visible-fields-tabs' name='visible-fields-format' type='radio' value='Tabs'>
+            <label for='visible-fields-commas'>Commas</label>
+            <input id='visible-fields-commas' name='visible-fields-format' type='radio' value='Commas'>
+          </div>
+        </div>
+      </div>
+
       <div class='label_value'>
         <div class='menu_box'>
           <label for='case-data' title='Comma sperated values, with multiple rows separated by line. This information will be used to autofill the caseDatum data.'>Case data</label>
@@ -142,11 +157,11 @@ class CaseSearchEditView extends Backbone.View
             <input id='case-data-commas' name='case-data-format' type='radio' value='Commas'>
           </div>
         </div>
-
       </div>
     "
 
   afterRender: ->
     @updateFields()
+    @updateVisibleFields()
     @updateCaseData()
 

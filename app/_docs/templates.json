@@ -11,6 +11,9 @@
     "caseSearch" : {
       "prototype" : "caseSearch"
     },
+    "caseSelect" : {
+      "prototype" : "caseSelect"
+    },
     "grid" : {
       "prototype" : "grid",
       "items" : [],
@@ -51,6 +54,9 @@
   "subtestTemplates" : {
     "gps": {
       "GPS Coordinates": {}
+    },
+    "caseSelect" : {
+      "Case select" : {}
     },
     "caseSearch": {
       "Case search": {}

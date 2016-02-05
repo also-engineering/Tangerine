@@ -6,7 +6,7 @@
 
 class CaseSearchRunView extends Backbone.View
 
-  className: "LocationRunView"
+  className: "CaseSearchRunView"
 
   events:
     "click #search-results tr" : "autofill"
@@ -27,14 +27,13 @@ class CaseSearchRunView extends Backbone.View
     @$el.find('#search-results').html "
       <table style='width:100%;'>
         <tr>
-            #{@fields.map((field,i) ->
-              "<th>#{field}</th>"
-            ).join('')}
+            #{@searchResultHeaders()}
         </tr>
 
         #{filtered.map((hit) =>
           "<tr data-index='#{_(hit).last()}'>#{
-            @fields.map((field,i) ->
+            @fields.map((field,i) =>
+              return "" if @visibleFields.indexOf(field) == -1
               "<td>#{hit[i]}</td>"
             ).join('')
           }</tr>"
@@ -45,6 +44,12 @@ class CaseSearchRunView extends Backbone.View
     @text =
       clear : t("LocationRunView.button.clear")
 
+  searchResultHeaders: ->
+    @fields.map((field,i) =>
+      return "" if @visibleFields.indexOf(field) == -1
+      "<th>#{field.underscore().humanize()}</th>"
+    ).join('')
+
   initialize: (options) ->
 
     @i18n()
@@ -53,12 +58,14 @@ class CaseSearchRunView extends Backbone.View
     @parent    = options.parent
     @dataEntry = options.dataEntry
 
-
-    @fields = @model.getArray("fields")
-    @caseData = @model.getArray("caseData")
+    @fields        = @model.getArray("fields")
+    @visibleFields = @model.getArray("visibleFields")
+    @caseData      = @model.getArray("caseData")
 
     if @fields.length is 1 and @fields[0] is ""
       @fields = []
+    if @visibleFields.length is 1 and @visibleFields[0] is ""
+      @visibleFields = []
     if @caseData.length is 1 and @caseData[0] is ""
       @caseData = []
 
@@ -76,25 +83,40 @@ class CaseSearchRunView extends Backbone.View
     @render()
 
   autofill: (event) ->
-    index = $(event.target).closest('tr').attr('data-index')
-    console.log("autofill", index)
+    $tr = $(event.target).closest('tr')
+    index = $tr.attr('data-index')
+    $table = @$el.find("#search-results")
+    $table.html "
+      <tr>#{@searchResultHeaders()}</tr>
+    "
+    $table.append($tr.addClass('highlight'))
     return unless index?
     caseDatum = @caseData[index]
-    @fields.forEach (field, i) =>
+    @fields.forEach ( (field, i) ->
+      return if @visibleFields.indexOf(field) == -1
       @$el.find("#field-#{i}").val(caseDatum[i])
-    $('.SubtestRunView').scrollTo()
+    ), @
 
+    $('.SubtestRunView').scrollTo()
 
   render: ->
 
     @$el.html "
-      <button class='clear command'>#{@text.clear}</button>
+
       <table>
-        #{@fields.map( (field,i) -> "<tr><th style='text-align:left'>#{field.underscore().humanize()}</th><td><input id='field-#{i}' data-field='#{i}'></td></tr>" ).join('')}
+        #{@fields.map( (field,i) =>
+          return "" if @visibleFields.indexOf(field) == -1
+          "<tr><th style='text-align:left'>#{field.underscore().humanize()}</th><td><input id='field-#{i}' data-field='#{i}'></td></tr>"
+        ).join('')}
       </table>
 
-      <table id='search-results'>
-      </table>
+      <button class='clear command'>#{@text.clear}</button>
+
+      <section>
+        <h2>Found</h2>
+        <table id='search-results'>
+        </table>
+      </section>
     "
 
     @trigger "rendered"
@@ -102,15 +124,22 @@ class CaseSearchRunView extends Backbone.View
 
 
   getResult: ->
-    return {
-      fields   : @levels
-      location : @levels.map (level) -> $.trim(@$el.find("#level_#{i}").val())
+    caseAttributes = {
+      fields   : @fields
+      caseData : @fields.map (field, i) ->
+        $.trim(@$el.find("#field-#{i}").val())
+      , @
     }
+    oneCase = new Case caseAttributes
+    oneCase.save null,
+      error: -> Utils.midAlert "Save error. Please try again."
+
+    return caseAttributes
 
   getSkipped: ->
     return {
-      fields   : @levels
-      location : @levels.map -> "skipped"
+      fields   : @fields
+      caseData : @fields.map -> "S"
     }
 
   isValid: ->

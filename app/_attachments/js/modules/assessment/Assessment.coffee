@@ -14,7 +14,7 @@ class Assessment extends Backbone.Model
 
   # refactor to events
   verifyConnection: ( callbacks = {} ) =>
-    console.log "called"
+
     @timer = setTimeout(callbacks.error, @VERIFY_TIMEOUT) if callbacks.error?
     $.ajax
       url: Tangerine.settings.urlView("group", "byDKey")

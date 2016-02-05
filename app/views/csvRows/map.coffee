@@ -17,11 +17,12 @@ The only real behavior worth mentioning here is
 
   prototypes  = require("views/lib/prototypes")
 
-  cellsGrid        = prototypes.cellsGrid
-  cellsSurvey      = prototypes.cellsSurvey
-  cellsDatetime    = prototypes.cellsDatetime
-  cellsGps         = prototypes.cellsGps
-  cellsLocation    = prototypes.cellsLocation
+  cellsGrid      = prototypes.cellsGrid
+  cellsSurvey    = prototypes.cellsSurvey
+  cellsDatetime  = prototypes.cellsDatetime
+  cellsGps       = prototypes.cellsGps
+  cellsLocation  = prototypes.cellsLocation
+  cellsCases     = prototypes.cellsCases
 
   subtestData = doc.subtestData
 
@@ -86,6 +87,12 @@ The only real behavior worth mentioning here is
 
     else if prototype == "location"
       result = result.concat cellsLocation subtest
+
+    else if prototype == "caseSearch"
+      result = result.concat cellsCases subtest
+
+    else if prototype == "caseSelect"
+      result = result.concat cellsCases subtest
 
     else if prototype == "grid"
       result = result.concat cellsGrid subtest

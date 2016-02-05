@@ -10,6 +10,12 @@ cellsLocation = ( subtest ) ->
     row.push cell subtest, label, subtest.data.location[i]
   return row
 
+cellsCases = ( subtest ) ->
+  row = []
+  for field, i in subtest.data.fields
+    row.push cell subtest, field, subtest.data.caseData[i]
+  return row
+
 cellsDatetime = ( subtest, datetimeSuffix ) ->
   row = []
   months = ["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"]
@@ -71,9 +77,10 @@ cellsGps = (subtest) ->
   return row
 
 
-exports.cellsGrid        = cellsGrid
-exports.cellsGps         = cellsGps
-exports.cellsSurvey      = cellsSurvey
-exports.cellsDatetime    = cellsDatetime
-exports.cellsLocation    = cellsLocation
+exports.cellsGrid     = cellsGrid
+exports.cellsGps      = cellsGps
+exports.cellsSurvey   = cellsSurvey
+exports.cellsDatetime = cellsDatetime
+exports.cellsLocation = cellsLocation
+exports.cellsCases    = cellsCases
 
