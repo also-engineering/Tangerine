@@ -26,14 +26,14 @@ ResultOfMultiple = (name) ->
 
   result = []
   for key, value of returnView.answer
-    result.push key if value == "checked"
+    result.push key if value == QuestionRunView.c.CHECKED
   return result
 
 ResultOfPrevious = (name) ->
   return vm.currentView.result.getVariable(name)
 
 ResultOfGrid = (name) ->
-  return vm.currentView.result.getItemResultCountByVariableName(name, "correct")
+  return vm.currentView.result.getItemResultCountByVariableName(name, GridRunView.c.CORRECT)
 
 
 #
