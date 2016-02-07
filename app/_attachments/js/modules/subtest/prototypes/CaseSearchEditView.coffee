@@ -81,6 +81,7 @@ class CaseSearchEditView extends Backbone.View
     visibleFields = @model.get 'visibleFields'
     fields        = @model.get 'fields'
     visibleFields.forEach (oneField) =>
+      return if oneField.length is 0
       @errors.push 'unknown_visible_field' if fields.indexOf(oneField) == -1
 
     for caseDatum in @model.get("caseData")
