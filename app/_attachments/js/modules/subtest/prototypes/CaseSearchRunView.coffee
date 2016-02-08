@@ -10,6 +10,7 @@ class CaseSearchRunView extends Backbone.View
 
   events:
     "click #search-results tr" : "autofill"
+    "change select"  : "showOptions"
     "keyup input"  : "showOptions"
     "click .clear" : "clearInputs"
 
@@ -21,7 +22,11 @@ class CaseSearchRunView extends Backbone.View
     @fields.forEach ( field, i) =>
       value = (@$el.find("#field-#{i}").val() || "").toLowerCase()
       return if value is ""
-      filtered = filtered.filter (caseDatum) -> caseDatum[i].toLowerCase().indexOf(value) != -1
+      console.log(field)
+      if field.toLowerCase().match(/day$|month$|year$/)
+        filtered = filtered.filter (caseDatum) -> parseInt(caseDatum[i]) is parseInt(value)
+      else
+        filtered = filtered.filter (caseDatum) -> caseDatum[i].toLowerCase().indexOf(value) != -1
 
 
     @$el.find('#search-results').html "
@@ -99,6 +104,39 @@ class CaseSearchRunView extends Backbone.View
 
     $('.SubtestRunView').scrollTo()
 
+  inputType: (field, i) ->
+    field = field.toLowerCase()
+    if field.match(/day$/)
+      days = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31]
+      return "<select id='field-#{i}' data-field='#{i}'>
+        <option value=''>--</option>
+      #{days.map((day)->
+        "<option value='#{day}'>#{day}</option>").join('')}
+      </select>"
+    else if field.match(/month$/)
+      month = ['Jan (01)', 'Feb (02)', 'Mar (03)', 'Apr (04)', 'May (05)', 'Jun (06)', 'Jul (07)', 'Aug (08)', 'Sep (09)', 'Oct (10)', 'Nov (11)', 'Dec (12)']
+      return "<select id='field-#{i}' data-field='#{i}'>
+        <option value=''>--</option>
+      #{month.map((month, i)->
+        "<option value='#{i+1}'>#{month}</option>").join('')}
+      </select>"
+    else if field.match(/year$/)
+      years = [2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016]
+      return "<select id='field-#{i}' data-field='#{i}'>
+        <option value=''>--</option>
+      #{years.map((year)->
+        "<option value='#{year}'>#{year}</option>").join('')}
+      </select>"
+    else if field.match(/gender$/)
+      return "<select id='field-#{i}' data-field='#{i}'>
+        <option value=''>--</option>
+        <option value='boy'>boy</option>
+        <option value='girl'>girl</option>
+      </select>"
+    else
+      "<input id='field-#{i}' data-field='#{i}'>"
+
+
   render: ->
 
     @$el.html "
@@ -106,7 +144,7 @@ class CaseSearchRunView extends Backbone.View
       <table>
         #{@fields.map( (field,i) =>
           return "" if @visibleFields.indexOf(field) == -1
-          "<tr><th style='text-align:left'>#{field.underscore().humanize()}</th><td><input id='field-#{i}' data-field='#{i}'></td></tr>"
+          "<tr><th style='text-align:left'>#{field.underscore().humanize()}</th><td>#{@inputType(field, i)}</td></tr>"
         ).join('')}
       </table>
 
