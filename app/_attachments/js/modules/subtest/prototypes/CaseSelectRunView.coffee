@@ -56,10 +56,11 @@ class CaseSelectRunView extends Backbone.View
     @$el.html "
       <h2>Select a #{@caseName}</h2>
       <select id='selector'>
+        <option selected disabled></option>
+        <option value='none'>None</option>
         #{@cases.models.map((oneCase) =>
           "<option value='#{oneCase.id}'>
             #{@visibleFields.map((field) =>
-              console.log("testing")
               @getFromCase(oneCase,field)
             ).join(' - ')}
           </option>").join('')}
@@ -78,6 +79,12 @@ class CaseSelectRunView extends Backbone.View
 
   getResult: ->
     selectedId = @$el.find('#selector option:selected').val()
+    if selectedId is ''
+      return {
+        fields: ['no_case_selected'],
+        caseData : [1]
+      }
+
     selectedCase = @cases.get(selectedId)
 
     caseAttributes = {
