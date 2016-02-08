@@ -28,6 +28,10 @@ class CaseSearchRunView extends Backbone.View
       else
         filtered = filtered.filter (caseDatum) -> caseDatum[i].toLowerCase().indexOf(value) != -1
 
+    if filtered.length is 0
+      return @$el.find('#search-results').html "
+        <h3>No records found</h3>
+      "
 
     @$el.find('#search-results').html "
       <table style='width:100%;'>
