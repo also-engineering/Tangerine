@@ -70,13 +70,14 @@ class Assessment extends Backbone.Model
 
     localDKey = Tangerine.settings.location.group.db+Tangerine.settings.couch.view + "byDKey"
 
-    sourceDKey = "/"+sourceDB+"/"+Tangerine.settings.couch.view + "byDKey"
+    sourceDKey = "/db/"+sourceDB+"/"+Tangerine.settings.couch.view + "byDKey"
 
     $.ajax
       url: sourceDKey,
-      type: "GET"
-      dataType: "jsonp"
-      data: keys: JSON.stringify(dKeys)
+      type: "POST"
+      contentType: "application/json"
+      dataType: "json"
+      data: JSON.stringify(keys: dKeys)
       error: (a, b) => @trigger "status", "import error", "#{a} #{b}"
       success: (data) =>
         docList = []
