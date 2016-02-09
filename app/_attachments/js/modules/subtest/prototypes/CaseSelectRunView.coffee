@@ -54,9 +54,8 @@ class CaseSelectRunView extends Backbone.View
     return @$el.html "Loading" unless @ready
 
     @$el.html "
-      <h2>Select a #{@caseName}</h2>
       <select id='selector'>
-        <option selected disabled></option>
+        <option selected disabled>Please select a #{@caseName}</option>
         <option value='none'>None</option>
         #{@cases.models.map((oneCase) =>
           "<option value='#{oneCase.id}'>
