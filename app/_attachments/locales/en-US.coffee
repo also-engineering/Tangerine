@@ -94,7 +94,6 @@ Tangerine.locales["en-US"] =
         "import" : "Import"
         "apk" : "APK"
         "groups" : "Groups"
-        "universal_upload" : "Universal Upload"
         "sync_tablets" : "Sync tablets"
         "results" : "Results"
         "save" : "Save"

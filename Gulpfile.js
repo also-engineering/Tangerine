@@ -288,6 +288,8 @@ conf.fileOrder = [
   'Case',
   'Cases',
 
+  'SampleView',
+
   'SurveyRunView',
   'SurveyEditView',
 

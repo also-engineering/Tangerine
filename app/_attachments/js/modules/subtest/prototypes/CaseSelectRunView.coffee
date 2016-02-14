@@ -73,7 +73,6 @@ class CaseSelectRunView extends Backbone.View
     index = oneCase.getArray('fields').indexOf(field)
     return oneCase.get('caseData')[index]
 
-
   getResult: ->
     selectedId = @$el.find('#selector option:selected').val()
     if selectedId is 'none'

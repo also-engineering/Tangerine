@@ -43,12 +43,12 @@ class DatetimeRunView extends Backbone.View
       <div class='question'>
         <table>
           <tr>
-            <td><label for='year'>#{@text.year}</label><input id='year' value='#{year}'></td>
+            <td><label for='day'>#{@text.day}</label><input id='day' type='day' value='#{day}'></td>
             <td>
               <label for='month'>#{@text.month}</label><br>
               <select id='month' value='#{month}'>#{("<option value='#{m}' #{("selected='selected'" if m is month) || ''}>#{m.titleize()} </option>" for m in months).join('')}</select>
             </td>
-            <td><label for='day'>#{@text.day}</label><input id='day' type='day' value='#{day}'></td>
+            <td><label for='year'>#{@text.year}</label><input id='year' value='#{year}'></td>
           </tr>
           <tr>
             <td><label for='time'>#{@text.time}</label><br><input type='text' id='time' value='#{time}'></td>

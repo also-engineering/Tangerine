@@ -2,7 +2,7 @@
 var CheckDigit;
 
 CheckDigit = (function() {
-  CheckDigit.prototype.allowed = "ABCEFGHKMNPQRSTUVWXYZ".split("");
+  CheckDigit.prototype.allowed = "AEFHKMNPSTUV".split("");
 
   CheckDigit.prototype.weights = [1, 2, 5, 11, 13];
 

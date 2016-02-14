@@ -38,13 +38,13 @@
 # `generate` returns a complete check digit, does not change the id
 class CheckDigit
 
-  allowed : "ABCEFGHKMNPQRSTUVWXYZ".split ""
+  allowed : "AEFHKMNPSTUV".split ""
 
   weights : [1,2,5,11,13]   # TODO automatically calculate coprimes
 
   constructor: ( id = "" ) ->
     @set( id )
-  
+
   # set id, force uppercase
   set: ( id ) ->
     @id = id.toUpperCase()
@@ -53,7 +53,7 @@ class CheckDigit
   get: ( id = @id ) ->
     return null if !~( !~@allowed.indexOf(ch) for ch in id.split "" ).indexOf(false)
     return id + @getDigit id
-  
+
   # return full check digit sequence
   generate: ->
     return @get( (@allowed[Math.floor(Math.random() * @allowed.length)] for i in @weights ).join "" )

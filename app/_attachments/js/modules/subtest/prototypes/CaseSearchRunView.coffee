@@ -20,10 +20,19 @@ CaseSearchRunView = Backbone.View.extend
     filtered = @caseData.slice()
 
     @fields.forEach ( field, i) =>
+
       value = (@$el.find("#field-#{i}").val() || "").toLowerCase()
+
       return if value is ""
-      if field.toLowerCase().match(/day$|month$|year$/)
-        filtered = filtered.filter (caseDatum) -> parseInt(caseDatum[i]) is parseInt(value)
+
+      if field == 'gender'
+        filtered = filtered.filter (caseDatum) -> caseDatum[i] is value
+      else if field.length - 3 == field.toLowerCase().indexOf('day')
+        filtered = filtered.filter (caseDatum) -> caseDatum[i] is value
+      else if field.length - 5 == field.toLowerCase().indexOf('month')
+        filtered = filtered.filter (caseDatum) -> caseDatum[i] is value
+      else if field.length - 4 == field.toLowerCase().indexOf('year')
+        filtered = filtered.filter (caseDatum) -> caseDatum[i] is value
       else
         filtered = filtered.filter (caseDatum) -> caseDatum[i].toLowerCase().indexOf(value) != -1
 
@@ -42,7 +51,7 @@ CaseSearchRunView = Backbone.View.extend
           "<tr data-index='#{_(hit).last()}'>#{
             @fields.map((field,i) =>
               return "" if @visibleFields.indexOf(field) == -1
-              "<td>#{hit[i]}</td>"
+              "<td class='col-#{if i % 2 then 'even' else 'odd'}'>#{hit[i]}</td>"
             ).join('')
           }</tr>"
         ).join('')}
@@ -55,7 +64,7 @@ CaseSearchRunView = Backbone.View.extend
   searchResultHeaders: ->
     @fields.map((field,i) =>
       return "" if @visibleFields.indexOf(field) == -1
-      "<th>#{field.underscore().humanize()}</th>"
+      "<th class='col-#{if i % 2 then 'even' else 'odd'}'>#{field.underscore().humanize()}</th>"
     ).join('')
 
   initialize: (options) ->
@@ -144,6 +153,15 @@ CaseSearchRunView = Backbone.View.extend
   render: ->
 
     @$el.html "
+
+      <style>
+        .col-even {
+          background: #eee;
+        }
+        .col-odd {
+          background: #fff;
+        }
+      </style>
 
       <table>
         #{@fields.map( (field,i) =>

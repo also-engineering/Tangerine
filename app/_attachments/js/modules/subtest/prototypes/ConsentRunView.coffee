@@ -29,7 +29,7 @@ class ConsentRunView extends Backbone.View
     @parent = options.parent
     @dataEntry = options.dataEntry
 
-  
+
   render: ->
 
     @$el.html "
@@ -57,14 +57,14 @@ class ConsentRunView extends Backbone.View
       mode      : "single"
       dataEntry : false
       answer    : answer or ""
-    
+
     @consentButton.setElement @$el.find(".consent-button")
     @consentButton.on "change", @onConsentChange
     @consentButton.render()
 
     @trigger "rendered"
     @trigger "ready"
-  
+
   isValid: ->
     if @confirmedNonConsent is false
       if @consentButton.answer is "yes"
@@ -85,12 +85,12 @@ class ConsentRunView extends Backbone.View
     @confirmedNonConsent = true
     @parent.abort()
     return false
-  
+
   getSkipped: ->
     return "consent" : "skipped"
-  
+
   showErrors: ->
-    answer = @consentButton.answer 
+    answer = @consentButton.answer
     if answer == "no"
       Utils.midAlert @text.confirm
       @showNonConsent()
