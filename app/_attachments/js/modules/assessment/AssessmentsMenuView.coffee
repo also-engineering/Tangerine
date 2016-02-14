@@ -12,12 +12,15 @@ class AssessmentsMenuView extends Backbone.View
     'click .groups'      : 'gotoGroups'
     'click .universal_upload' : 'universalUpload'
 
+
     'click .sync_tablets' : 'syncTablets'
 
     'click .results'        : 'results'
     'click .settings'       : 'editInPlace'
     'keyup .edit_in_place'  : 'saveInPlace'
     'change .edit_in_place'  : 'saveInPlace'
+
+
 
   syncTablets: =>
     @tabletManager.sync()
@@ -93,6 +96,7 @@ class AssessmentsMenuView extends Backbone.View
       assessment  : t("AssessmentMenuView.label.assessment")
       assessments : t("AssessmentMenuView.label.assessments")
       curriculum  : t("AssessmentMenuView.label.curriculum")
+      sample_helper  : "Sample helper"
 
 
   initialize: (options) ->
@@ -126,6 +130,8 @@ class AssessmentsMenuView extends Backbone.View
     syncTabletsButton = "<button class='command sync_tablets'>#{@text.sync_tablets}</button>"
     resultsButton = "<button class='navigation results'>#{@text.results}</button>"
     groupHandle   = "<h2 class='settings grey' data-attribtue='groupHandle'>#{Tangerine.settings.getEscapedString('groupHandle') || Tangerine.settings.get('groupName')}</h2>"
+    sampleButton  = "<a href='#sample'><button class='navigation sample'>#{@text.sample_helper}</button></a>"
+
 
 
     containers = []
@@ -137,6 +143,7 @@ class AssessmentsMenuView extends Backbone.View
 
 
     html = "
+      #{sampleButton}
       #{groupsButton}
       #{apkButton}
       #{resultsButton}

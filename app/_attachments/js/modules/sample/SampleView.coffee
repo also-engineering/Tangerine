@@ -156,8 +156,12 @@ SampleView = Backbone.View.extend
       return @$el.find("#sample-instructions").html "Sample all students."
 
     if boys <= need
+      if need - boys > 0
+        if need - boys <= girls - need
+          additionalGirls = "And sample #{need - boys} replacement girls."
+
       boysInstructions = "
-        Sample all boys.
+        Sample all boys. #{additionalGirls || ''}
       "
     else if boys > need
       samples = @getTwoTeirs
@@ -176,8 +180,16 @@ SampleView = Backbone.View.extend
       "
 
     if girls <= need
+      if need - girls > 0
+        if need - girls <= boys - need
+          additionalBoys = "And sample #{need - girls} replacement boys."
+
+      boysInstructions = "
+        Sample all boys. #{additionalBoys || ''}
+      "
+
       girlsInstructions = "
-        Sample all girls.
+        Sample all girls. #{}
       "
     else if girls > need
 
@@ -207,15 +219,16 @@ SampleView = Backbone.View.extend
   sampleWithInterval: (opts) ->
     interval = opts.interval
     need = opts.need
+    all = opts.all
+
     if need is "all"
       need = all.length
-    all = opts.all
 
     sample = []
     index = -1
     while (sample.length < need && all.length != 0)
       index = (index + interval) % all.length
-      sample = sample.concat( all.splice(index, 1) +  " " + @digit.generate() )
+      sample = sample.concat( all.splice(index, 1) )
       index--
     return sample
 
@@ -250,10 +263,10 @@ SampleView = Backbone.View.extend
   render: ->
     @$el.html "
       <h1>Sample helper</h1>
-      <h3>Have you verified the number of students present TODAY in this classroom?</h3>
-      <h3>Have you verified their CPBA status of all attending children?</h3>
+      <h3>1. Have you verified the number of students present TODAY in this classroom?</h3>
+      <h3>2. Have you verified their CPBA status of all attending children?</h3>
 
-      <label for='year'>Are there CPBA students in the classroom?</label>
+      <label for='year'>3. Are there CPBA students in the classroom?</label>
       <select id='year'>
         <option selected disabled>Select</option>
         <option value='1'>Yes</option>
