@@ -1,4 +1,4 @@
-class CasesearchEditView extends Backbone.View
+class CaseSearchEditView extends Backbone.View
 
   className: "CaseSelectEditView"
 

@@ -8,6 +8,7 @@ SampleView = Backbone.View.extend
     'change #year-1-cpba-girls' : 'updateYear1Instructions'
     'change #year-1-non-cpba-boys' : 'updateYear1Instructions'
     'change #year-1-non-cpba-girls' : 'updateYear1Instructions'
+    'change .verification' : 'verification'
 
   updateYear: ->
     @year = parseInt(@$el.find('#year').val())
@@ -63,49 +64,58 @@ SampleView = Backbone.View.extend
     cpbaGirlsInstructions = ''
     nonCpbaGirlsInstructions = ''
 
-    if cpbaBoys <= need
+    if cpbaBoys < need
+      cpbaBoysInstructions = "Sample all CPBA boys. Borrow  #{need-cpbaBoys} from CPBA girls first, then non-CPBA boys, then non-CPBA girls."
+    else if cpbaBoys == need
       cpbaBoysInstructions = "Sample all CPBA boys."
 
-    else if cpbaBoys > need
+    if cpbaGirls < need
+      cpbaGirlsInstructions = "Sample all CPBA girls. Borrow #{need-cpbaGirls} from CPBA boys first, then non-CPBA girls, then non-CPBA boys."
+    else if cpbaGirls == need
+      cpbaGirlsInstructions = "Sample all CPBA girls."
 
+    if cpbaBoys > need
       samples = @getTwoTeirs
         from: cpbaBoys
         need: need
 
       firstSelection = samples.first
-      replacements = samples.second
+      replacements = samples.second.sort(@naturally)
 
       cpbaBoysInstructions = "
         <h3>First selection</h3>#{firstSelection.join(', ')}
         <h3>Replacements</h3>#{replacements.join(', ')}
       "
 
-    if nonCpbaBoys <= need
-      nonCpbaBoysInstructions = "Sample all Non-CPBA boys."
+    if nonCpbaBoys < need
+      nonCpbaBoysInstructions = "Sample all non-CPBA boys. Borrow  #{need-nonCpbaBoys} from non-CPBA girls first, then CPBA boys, then CPBA girls."
+    else if nonCpbaBoys == need
+      nonCpbaBoysInstructions = "Sample all non-CPBA boys."
 
-    else if nonCpbaBoys > need
+    if nonCpbaGirls < need
+      nonCpbaGirlsInstructions = "Sample all non-CPBA girls. Borrow #{need-nonCpbaGirls} from non-CPBA boys first, then CPBA girls, then CPBA boys."
+    else if nonCpbaGirls == need
+      nonCpbaGirlsInstructions = "Sample all non-CPBA girls."
+
+    if nonCpbaBoys > need
       samples = @getTwoTeirs
         from: nonCpbaBoys
         need: need
       firstSelection = samples.first
-      replacements = samples.second
+      replacements = samples.second.sort(@naturally)
 
       nonCpbaBoysInstructions = "
         <h3>First selection</h3>#{firstSelection.join(', ')}
         <h3>Replacements</h3>#{replacements.join(', ')}
       "
 
-    if cpbaGirls <= need
-      cpbaGirlsInstructions = "Sample all CPBA girls."
-
-    else if cpbaGirls > need
-
+    if cpbaGirls > need
       samples = @getTwoTeirs
         from: cpbaGirls
         need: need
 
       firstSelection = samples.first
-      replacements = samples.second
+      replacements = samples.second.sort(@naturally)
 
       cpbaGirlsInstructions = "
         <h3>First selection</h3>#{firstSelection.join(', ')}
@@ -120,7 +130,7 @@ SampleView = Backbone.View.extend
         from: nonCpbaGirls
         need: need
       firstSelection = samples.first
-      replacements = samples.second
+      replacements = samples.second.sort(@naturally)
 
       nonCpbaGirlsInstructions = "
         <h3>First selection</h3>#{firstSelection.join(', ')}
@@ -135,10 +145,10 @@ SampleView = Backbone.View.extend
         <h2>CPBA Girls</h2>#{cpbaGirlsInstructions}
       </section>
       <section>
-        <h2>Non CPBA Boys</h2>#{nonCpbaBoysInstructions}
+        <h2>Non-CPBA Boys</h2>#{nonCpbaBoysInstructions}
       </section>
       <section>
-        <h2>Non CPBA Girls</h2>#{nonCpbaGirlsInstructions}
+        <h2>Non-CPBA Girls</h2>#{nonCpbaGirlsInstructions}
       </section>
     "
 
@@ -169,7 +179,7 @@ SampleView = Backbone.View.extend
         need: need
 
       firstSelection = samples.first
-      replacements = samples.second
+      replacements = samples.second.sort(@naturally)
 
       boysInstructions = "
         <h3>First selection</h3>
@@ -184,12 +194,8 @@ SampleView = Backbone.View.extend
         if need - girls <= boys - need
           additionalBoys = "And sample #{need - girls} replacement boys."
 
-      boysInstructions = "
-        Sample all boys. #{additionalBoys || ''}
-      "
-
       girlsInstructions = "
-        Sample all girls. #{}
+        Sample all girls. #{additionalBoys || ''}
       "
     else if girls > need
 
@@ -198,7 +204,7 @@ SampleView = Backbone.View.extend
         need: need
 
       girlFirstSelection = girlSample.first
-      girlReplacements = girlSample.second
+      girlReplacements = girlSample.second.sort(@naturally)
 
       girlsInstructions = "
         <h3>First selection</h3><p>#{girlFirstSelection.join(', ')}</p>
@@ -256,9 +262,36 @@ SampleView = Backbone.View.extend
       }
 
   initialize: ->
+    @naturally = (a,b) ->
+      if ( a < b )
+        return -1
+      else if ( a > b )
+        return 1
+      else
+        return 0
     @digit = new CheckDigit
 
+  verification: ->
+    console.log("verifying")
+    yesRf  = @$el.find("#rf").val() is "1"
+    yesApp = @$el.find("#app").val() is "1"
+    yesFac = @$el.find("#fac").val() is "1"
 
+    noRf  = @$el.find("#rf").val() is "0"
+    noApp = @$el.find("#app").val() is "0"
+    noFac = @$el.find("#fac").val() is "0"
+
+    noFacThere = @$el.find("#fac").val() is "9"
+
+    updateResult = (html) => @$el.find("#verification-result").html html
+
+    return updateResult("Place in CPBA pile.") if yesRf and yesApp and yesFac
+    return updateResult("Place in CPBA pile.") if yesRf and yesApp and noFac
+    return updateResult("Place in CPBA pile.") if noRf and yesApp and yesFac
+    return updateResult("Place in CPBA pile.") if noRf and yesApp and noFac
+    return updateResult("Place in CPBA pile.") if yesRf and yesApp and noFacThere
+    return updateResult("Place in non-CPBA pile.") if noRf and noApp and noFac
+    return updateResult("<span style='color:green'>1. Put a green sticker on the Student Id form,</span> and 2. Place in CPBA pile. ") if yesRf and noApp and yesFac
 
   render: ->
     @$el.html "
@@ -274,6 +307,47 @@ SampleView = Backbone.View.extend
       </select>
       <section id='sample-calculator'></section>
       <div id='sample-instructions'></div>
+
+      <section>
+        <h1>Verification rule</h1>
+
+        <table>
+        <tr>
+          <td><label for='rf'>Registration Form</label></td>
+          <td>
+            <select class='verification' id='rf'>
+              <option disabled selected>Please select</option>
+              <option value='1'>Yes</option>
+              <option value='0'>No</option>
+            </select>
+          </td>
+          <td rowspan='3'><td id='verification-result'></td></tr>
+        </tr>
+        <tr>
+          <td><label for='app'>App</label></td>
+          <td>
+            <select class='verification' id='app'>
+              <option disabled selected>Please select</option>
+              <option value='1'>Yes</option>
+              <option value='0'>No</option>
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <td><label for='fac'>Facilitator</label></td>
+          <td>
+            <select class='verification' id='fac'>
+              <option disabled selected>Please select</option>
+              <option value='1'>Yes</option>
+              <option value='0'>No</option>
+              <option value='9'>Not present</option>
+            </select>
+          </td>
+        </tr>
+      </table>
+
+      </section>
+
     "
 
     @trigger 'rendered'
