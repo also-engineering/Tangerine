@@ -54,25 +54,114 @@ SampleView = Backbone.View.extend
 
     need = 5
 
-    cpbaBoys = parseInt @$el.find("#year-1-cpba-boys").val()
-    nonCpbaBoys = parseInt @$el.find("#year-1-non-cpba-boys").val()
-    cpbaGirls = parseInt @$el.find("#year-1-cpba-girls").val()
+    cpbaBoys     = parseInt @$el.find("#year-1-cpba-boys").val()
+    nonCpbaBoys  = parseInt @$el.find("#year-1-non-cpba-boys").val()
+    cpbaGirls    = parseInt @$el.find("#year-1-cpba-girls").val()
     nonCpbaGirls = parseInt @$el.find("#year-1-non-cpba-girls").val()
 
-    cpbaBoysInstructions = ''
-    nonCpbaBoysInstructions = ''
-    cpbaGirlsInstructions = ''
+    extraCpbaBoys     = cpbaBoys - need
+    extraNonCpbaBoys  = nonCpbaBoys - need
+    extraCpbaGirls    = cpbaGirls - need
+    extraNonCpbaGirls = nonCpbaGirls - need
+
+    neededCpbaBoys     = need - cpbaBoys
+    neededNonCpbaBoys  = need - nonCpbaBoys
+    neededCpbaGirls    = need - cpbaGirls
+    neededNonCpbaGirls = need - nonCpbaGirls
+
+    if cpbaBoys + cpbaGirls + nonCpbaBoys + nonCpbaGirls < 21
+      return @$el.find("#sample-instructions").html "Sample all students"
+
+    cpbaBoysInstructions     = ''
+    nonCpbaBoysInstructions  = ''
+    cpbaGirlsInstructions    = ''
     nonCpbaGirlsInstructions = ''
 
+
     if cpbaBoys < need
-      cpbaBoysInstructions = "Sample all CPBA boys. Borrow  #{need-cpbaBoys} from CPBA girls first, then non-CPBA boys, then non-CPBA girls."
+      moreInstructions = ''
+      if neededCpbaBoys > 0 and extraCpbaGirls > 0
+        diff = Math.min(neededCpbaBoys, extraCpbaGirls)
+        moreInstructions += "Borrow #{diff} from CPBA girls. "
+        extraCpbaGirls -= diff
+        neededCpbaBoys -= diff
+      if neededCpbaBoys > 0 and extraNonCpbaBoys > 0
+        diff = Math.min(neededCpbaBoys, extraNonCpbaBoys)
+        moreInstructions += "Borrow #{diff} from non-CPBA boys. "
+        extraNonCpbaBoys -= diff
+        neededCpbaBoys -= diff
+      if neededCpbaBoys > 0 and extraNonCpbaGirls > 0
+        diff = Math.min(neededCpbaBoys, extraNonCpbaGirls)
+        moreInstructions += "Borrow #{diff} from non-CPBA girls. "
+        extraNonCpbaGirls -= diff
+        neededCpbaBoys -= diff
+      cpbaBoysInstructions = "Sample all CPBA boys. #{moreInstructions}"
     else if cpbaBoys == need
       cpbaBoysInstructions = "Sample all CPBA boys."
 
     if cpbaGirls < need
-      cpbaGirlsInstructions = "Sample all CPBA girls. Borrow #{need-cpbaGirls} from CPBA boys first, then non-CPBA girls, then non-CPBA boys."
+      moreInstructions = ''
+      if neededCpbaGirls > 0 and extraCpbaBoys > 0
+        diff = Math.min(neededCpbaGirls, extraCpbaBoys)
+        moreInstructions += "Borrow #{diff} from CPBA boys. "
+        extraCpbaBoys -= diff
+        neededCpbaGirls -= diff
+      if neededCpbaGirls > 0 and extraNonCpbaGirls > 0
+        diff = Math.min(neededCpbaGirls, extraNonCpbaGirls)
+        moreInstructions += "Borrow #{diff} from non-CPBA girls. "
+        extraNonCpbaGirls -= diff
+        neededCpbaGirls -= diff
+      if neededCpbaGirls > 0 and extraNonCpbaBoys > 0
+        diff = Math.min(neededCpbaGirls, extraNonCpbaBoys)
+        moreInstructions += "Borrow #{diff} from non-CPBA boys. "
+        extraNonCpbaBoys -= diff
+        neededCpbaGirls -= diff
+      cpbaGirlsInstructions = "Sample all CPBA girls. #{moreInstructions}"
     else if cpbaGirls == need
       cpbaGirlsInstructions = "Sample all CPBA girls."
+
+    if nonCpbaBoys < need
+      moreInstructions = ''
+      if neededNonCpbaBoys > 0 and extraNonCpbaGirls > 0
+        diff = Math.min(neededNonCpbaBoys, extraNonCpbaGirls)
+        moreInstructions += "Borrow #{diff} from non-CPBA girls. "
+        extraNonCpbaGirls -= diff
+        neededNonCpbaBoys -= diff
+      if neededNonCpbaBoys > 0 and extraCpbaBoys > 0
+        diff = Math.min(neededNonCpbaBoys, extraCpbaBoys)
+        moreInstructions += "Borrow #{diff} from CPBA boys. "
+        extraCpbaBoys -= diff
+        neededNonCpbaBoys -= diff
+      if neededNonCpbaBoys > 0 and extraCpbaGirls > 0
+        diff = Math.min(neededNonCpbaBoys, extraCpbaGirls)
+        moreInstructions += "Borrow #{diff} from CPBA girls. "
+        extraCpbaGirls -= diff
+        neededNonCpbaBoys -= diff
+
+      nonCpbaBoysInstructions = "Sample all non-CPBA boys. #{moreInstructions}"
+    else if nonCpbaBoys == need
+      nonCpbaBoysInstructions = "Sample all non-CPBA boys."
+
+    if nonCpbaGirls < need
+      moreInstructions = ''
+      if neededNonCpbaGirls > 0 and extraNonCpbaBoys > 0
+        diff = Math.min(neededNonCpbaGirls, extraNonCpbaBoys)
+        moreInstructions += "Borrow #{diff} from non-CPBA boys. "
+        extraNonCpbaBoys -= diff
+        neededNonCpbaGirls -= diff
+      if neededNonCpbaGirls > 0 and extraCpbaGirls > 0
+        diff = Math.min(neededNonCpbaGirls, extraCpbaGirls)
+        moreInstructions += "Borrow #{diff} from CPBA girls. "
+        extraCpbaGirls -= diff
+        neededNonCpbaGirls -= diff
+      if neededNonCpbaGirls > 0 and extraCpbaBoys > 0
+        diff = Math.min(neededNonCpbaGirls, extraCpbaBoys)
+        moreInstructions += "Borrow #{diff} from CPBA boys. "
+        extraCpbaBoys -= diff
+        neededNonCpbaGirls -= diff
+      nonCpbaGirlsInstructions = "Sample all non-CPBA girls. #{moreInstructions}"
+    else if nonCpbaGirls == need
+      nonCpbaGirlsInstructions = "Sample all non-CPBA girls."
 
     if cpbaBoys > need
       samples = @getTwoTeirs
@@ -86,16 +175,6 @@ SampleView = Backbone.View.extend
         <h3>First selection</h3>#{firstSelection.join(', ')}
         <h3>Replacements</h3>#{replacements.join(', ')}
       "
-
-    if nonCpbaBoys < need
-      nonCpbaBoysInstructions = "Sample all non-CPBA boys. Borrow  #{need-nonCpbaBoys} from non-CPBA girls first, then CPBA boys, then CPBA girls."
-    else if nonCpbaBoys == need
-      nonCpbaBoysInstructions = "Sample all non-CPBA boys."
-
-    if nonCpbaGirls < need
-      nonCpbaGirlsInstructions = "Sample all non-CPBA girls. Borrow #{need-nonCpbaGirls} from non-CPBA boys first, then CPBA girls, then CPBA boys."
-    else if nonCpbaGirls == need
-      nonCpbaGirlsInstructions = "Sample all non-CPBA girls."
 
     if nonCpbaBoys > need
       samples = @getTwoTeirs
@@ -122,10 +201,8 @@ SampleView = Backbone.View.extend
         <h3>Replacements</h3>#{replacements.join(', ')}
       "
 
-    if nonCpbaGirls <= need
-      nonCpbaGirlsInstructions = "Sample all Non-CPBA girls."
 
-    else if nonCpbaGirls > need
+    if nonCpbaGirls > need
       samples = @getTwoTeirs
         from: nonCpbaGirls
         need: need
@@ -136,6 +213,11 @@ SampleView = Backbone.View.extend
         <h3>First selection</h3>#{firstSelection.join(', ')}
         <h3>Replacements</h3>#{replacements.join(', ')}
       "
+
+    console.log("report")
+    console.log(cpbaBoys,cpbaGirls,nonCpbaBoys,nonCpbaGirls)
+    console.log(neededCpbaBoys,neededCpbaGirls,neededNonCpbaBoys,neededNonCpbaGirls)
+    console.log(extraCpbaBoys,extraCpbaGirls,extraNonCpbaBoys,extraNonCpbaGirls)
 
     @$el.find("#sample-instructions").html "
       <section>
@@ -271,27 +353,7 @@ SampleView = Backbone.View.extend
         return 0
     @digit = new CheckDigit
 
-  verification: ->
-    console.log("verifying")
-    yesRf  = @$el.find("#rf").val() is "1"
-    yesApp = @$el.find("#app").val() is "1"
-    yesFac = @$el.find("#fac").val() is "1"
 
-    noRf  = @$el.find("#rf").val() is "0"
-    noApp = @$el.find("#app").val() is "0"
-    noFac = @$el.find("#fac").val() is "0"
-
-    noFacThere = @$el.find("#fac").val() is "9"
-
-    updateResult = (html) => @$el.find("#verification-result").html html
-
-    return updateResult("Place in CPBA pile.") if yesRf and yesApp and yesFac
-    return updateResult("Place in CPBA pile.") if yesRf and yesApp and noFac
-    return updateResult("Place in CPBA pile.") if noRf and yesApp and yesFac
-    return updateResult("Place in CPBA pile.") if noRf and yesApp and noFac
-    return updateResult("Place in CPBA pile.") if yesRf and yesApp and noFacThere
-    return updateResult("Place in non-CPBA pile.") if noRf and noApp and noFac
-    return updateResult("<span style='color:green'>1. Put a green sticker on the Student Id form,</span> and 2. Place in CPBA pile. ") if yesRf and noApp and yesFac
 
   render: ->
     @$el.html "
@@ -307,47 +369,6 @@ SampleView = Backbone.View.extend
       </select>
       <section id='sample-calculator'></section>
       <div id='sample-instructions'></div>
-
-      <section>
-        <h1>Verification rule</h1>
-
-        <table>
-        <tr>
-          <td><label for='rf'>Registration Form</label></td>
-          <td>
-            <select class='verification' id='rf'>
-              <option disabled selected>Please select</option>
-              <option value='1'>Yes</option>
-              <option value='0'>No</option>
-            </select>
-          </td>
-          <td rowspan='3'><td id='verification-result'></td></tr>
-        </tr>
-        <tr>
-          <td><label for='app'>App</label></td>
-          <td>
-            <select class='verification' id='app'>
-              <option disabled selected>Please select</option>
-              <option value='1'>Yes</option>
-              <option value='0'>No</option>
-            </select>
-          </td>
-        </tr>
-        <tr>
-          <td><label for='fac'>Facilitator</label></td>
-          <td>
-            <select class='verification' id='fac'>
-              <option disabled selected>Please select</option>
-              <option value='1'>Yes</option>
-              <option value='0'>No</option>
-              <option value='9'>Not present</option>
-            </select>
-          </td>
-        </tr>
-      </table>
-
-      </section>
-
     "
 
     @trigger 'rendered'
