@@ -19,7 +19,7 @@ translatedSurveyValue = ( databaseValue = "no_record" ) ->
 
 # Makes an object that descrbes a csv value
 cell = ( subtest, key, value ) ->
-  idValue = subtest.subtestId || String(subtest)
+  idValue = (subtest.subtestId || String(subtest)).substr(-3)
   machineName = "#{idValue}-#{key}"
 
   return {
@@ -28,7 +28,7 @@ cell = ( subtest, key, value ) ->
     m : machineName
   }
 
-exports.cell        = cell
+exports.cell = cell
 
 exports.translatedSurveyValue = translatedSurveyValue
 exports.translatedGridValue = translatedGridValue

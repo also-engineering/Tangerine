@@ -46,6 +46,9 @@ class Result extends Backbone.Model
       if data.labels?
         for label, i in data.labels
           return data.location[i] if label is key
+      else if data.fields?
+        for field, i in data.fields
+          return data.caseData[i] if field is key
       else
         for variable, value of data
           if variable == key

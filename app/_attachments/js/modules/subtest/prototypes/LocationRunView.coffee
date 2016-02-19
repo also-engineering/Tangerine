@@ -21,7 +21,7 @@ class LocationRunView extends Backbone.View
     @dataEntry = options.dataEntry
 
 
-    @levels = @model.get("levels")       || []
+    @levels    = @model.get("levels")    || []
     @locations = @model.get("locations") || []
 
     if @levels.length is 1 and @levels[0] is ""
@@ -127,10 +127,10 @@ class LocationRunView extends Backbone.View
         previousLevel = ''
         if previous
           previousLevel = previous.location[i]
-        
+
         levelOptions = @getOptions(i, previousLevel)
 
-        isDisabled = (i isnt 0 and not previousLevel) and "disabled='disabled'" 
+        isDisabled = (i isnt 0 and not previousLevel) and "disabled='disabled'"
 
         html += "
           <div class='label_value'>
@@ -159,7 +159,7 @@ class LocationRunView extends Backbone.View
   getOptions: ( index, previousLevel ) ->
 
     doneOptions = []
-    levelOptions = ''
+    levelOptions = []
 
     previousFlag = false
 
@@ -185,19 +185,26 @@ class LocationRunView extends Backbone.View
           doneOptions.push location[index]
 
           locationName = _(location[index]).escape()
-          
+
           if location[index] is previousLevel
             selected = "selected='selected'"
             previousFlag = true
           else
             selected = ''
-          levelOptions += "
+          levelOptions.push "
             <option value='#{locationName}' #{selected or ''}>#{locationName}</option>
           "
 
     selectPrompt = "selected='selected'" unless previousFlag
 
     promptOption  = "<option #{selectPrompt or ''} disabled='disabled'>Please select a #{@levels[index]}</option>"
+
+    levelOptions.sort (a, b) ->
+      return -1 if (a < b)
+      return 1 if (a > b)
+      return 0
+
+    levelOptions.join('')
 
     if doneOptions.length is 1
       return levelOptions

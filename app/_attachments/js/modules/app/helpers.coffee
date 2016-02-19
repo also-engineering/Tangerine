@@ -26,14 +26,14 @@ ResultOfMultiple = (name) ->
 
   result = []
   for key, value of returnView.answer
-    result.push key if value == "checked"
+    result.push key if value == QuestionRunView.prototype.c.CHECKED
   return result
 
 ResultOfPrevious = (name) ->
   return vm.currentView.result.getVariable(name)
 
 ResultOfGrid = (name) ->
-  return vm.currentView.result.getItemResultCountByVariableName(name, "correct")
+  return vm.currentView.result.getItemResultCountByVariableName(name, GridRunView.prototype.c.CORRECT)
 
 
 #
@@ -88,6 +88,12 @@ Backbone.Model.prototype.prune = ( shape = {} ) ->
   throw "Cannot conform to empty standard. Use @clear() instead." if _.isEmpty(standard)
   for key, value of @attributes
     @unset(key) unless key in standard
+
+# proxy the save method
+Backbone.Model.prototype.originalSave = Backbone.Model.prototype.save;
+Backbone.Model.prototype.save = ->
+  @_beforeSave()
+  @originalSave.apply(@, arguments)
 
 # hash the attributes of a model
 Backbone.Model.prototype.toHash = ->
@@ -252,7 +258,6 @@ _.indexBy = ( propertyName, objectArray ) ->
 
 class Utils
 
-
   @changeLanguage : (code, callback) ->
     i18n.setLng code, callback
 
@@ -305,29 +310,6 @@ class Utils
         loadOptions.complete options
 
     getNext {}
-
-  @universalUpload: ->
-    $.ajax
-      url: Tangerine.settings.urlView("local", "byCollection")
-      type: "POST"
-      dataType: "json"
-      contentType: "application/json"
-      data: JSON.stringify(
-        keys : ["result"]
-      )
-      success: (data) ->
-        docList = _.pluck(data.rows,"id")
-
-        $.couch.replicate(
-          Tangerine.settings.urlDB("local"),
-          Tangerine.settings.urlDB("group"),
-            success: =>
-              Utils.sticky "Results synced to cloud successfully."
-            error: (code, message) =>
-              Utils.sticky "Upload error<br>#{code} #{message}"
-          ,
-            doc_ids: docList
-        )
 
   @restartTangerine: (message, callback) ->
     Utils.midAlert "#{message || 'Restarting Tangerine'}"

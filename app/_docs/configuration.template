@@ -65,6 +65,14 @@
          "run" : "GridRunView",
          "edit" : "GridEditView"
       },
+      "caseSearch" : {
+         "run" : "CaseSearchRunView",
+         "edit" : "CaseSearchEditView"
+      },
+      "caseSelect" : {
+         "run" : "CaseSelectRunView",
+         "edit" : "CaseSelectEditView"
+      },
       "location" : {
          "run" : "LocationRunView",
          "edit" : "LocationEditView"

@@ -52,8 +52,7 @@ class AssessmentRunView extends Backbone.View
       assessmentId   : @model.id
       assessmentName : @model.get "name"
       blank          : true
-
-    if hasSequences then @result.set("order_map" : @orderMap)
+      orderMap       : @orderMap
 
     resultView = new ResultView
       model          : @result

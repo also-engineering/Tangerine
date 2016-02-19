@@ -13,34 +13,18 @@ The only real behavior worth mentioning here is
 
   utils = require("views/lib/utils")
 
-  cell        = utils.cell
+  cell = utils.cell
 
   prototypes  = require("views/lib/prototypes")
 
-  cellsGrid        = prototypes.cellsGrid
-  cellsSurvey      = prototypes.cellsSurvey
-  cellsDatetime    = prototypes.cellsDatetime
-  cellsGps         = prototypes.cellsGps
-  cellsLocation    = prototypes.cellsLocation
+  cellsGrid      = prototypes.cellsGrid
+  cellsSurvey    = prototypes.cellsSurvey
+  cellsDatetime  = prototypes.cellsDatetime
+  cellsGps       = prototypes.cellsGps
+  cellsLocation  = prototypes.cellsLocation
+  cellsCases     = prototypes.cellsCases
 
   subtestData = doc.subtestData
-
-  isClassResult = typeof doc.klassId isnt "undefined"
-
-  # turn class results into regular results
-  if isClassResult
-
-    newData               = clone(doc.subtestData)
-    newData.subtestId     = doc.subtestId
-
-    newData.time_allowed  = doc.timeAllowed
-
-    subtestData = [ {
-      data      : newData
-      prototype : doc.prototype
-      subtestId : doc.subtestId
-    } ]
-
 
   result = []
 
@@ -48,24 +32,16 @@ The only real behavior worth mentioning here is
   Handle universal fields first
   ###
 
-  if isClassResult
-    result.push cell "universal", "studentId",  doc.studentId
-  else
-    result.push cell "universal", "enumerator", doc.enumerator
-    result.push cell "universal", "start_time", doc.startTime || ''
-    result.push cell "universal", "order_map",  (doc.order_map || []).join(",")
+
+  result.push cell "universal", "enumerator", doc.enumerator
+  result.push cell "universal", "start_time", doc.startTime || ''
+  result.push cell "universal", "order_map",  (doc.orderMap || []).join(",")
 
 
   datetimeCount = 0;
   linearOrder = subtestData.map (el, i) -> return i
 
   orderMap = doc.orderMap
-
-  # delete this when standardized
-  if typeof orderMap == "undefined" then orderMap = doc.order_map
-  if typeof orderMap == "undefined"
-    orderMap = linearOrder
-  # end delete
 
   timestamps = []
 
@@ -112,14 +88,17 @@ The only real behavior worth mentioning here is
     else if prototype == "location"
       result = result.concat cellsLocation subtest
 
+    else if prototype == "caseSearch"
+      result = result.concat cellsCases subtest
+
+    else if prototype == "caseSelect"
+      result = result.concat cellsCases subtest
+
     else if prototype == "grid"
-      result = result.concat cellsGrid subtest, isClassResult
+      result = result.concat cellsGrid subtest
 
     else if prototype == "survey"
       result = result.concat cellsSurvey subtest
-
-    else if prototype == "observation"
-      result = result.concat cellsObservation subtest
 
     else if prototype == "gps"
       result = result.concat cellsGps subtest
@@ -130,10 +109,6 @@ The only real behavior worth mentioning here is
   for timestamp, i in timestamps
     result.push cell("timestamp_" + i, "timestamp_" + i, timestamp)
 
-  keyId =
-    if isClassResult
-      doc.klassId
-    else
-      doc._id
+  keyId = doc._id
 
   emit keyId, result

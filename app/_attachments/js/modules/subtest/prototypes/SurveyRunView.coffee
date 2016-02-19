@@ -116,7 +116,7 @@ class SurveyRunView extends Backbone.View
 
     # trigger the question to run it's display code if the subtest's displaycode has already ran
     # if not, add it to a list to run later.
-    if @executeReady 
+    if @executeReady
       @questionViews[@questionIndex].trigger "show"
     else
       @triggerShowList = [] if not @triggerShowList
@@ -128,11 +128,11 @@ class SurveyRunView extends Backbone.View
     @updateProgressButtons()
 
   i18n: ->
-    @text = 
+    @text =
       pleaseAnswer : t("SurveyRunView.message.please_answer")
       correctErrors : t("SurveyRunView.message.correct_errors")
       notEnough : _(t("SurveyRunView.message.not_enough")).escape()
-      
+
       previousQuestion : t("SurveyRunView.button.previous_question")
       nextQuestion : t("SurveyRunView.button.next_question")
 
@@ -156,7 +156,7 @@ class SurveyRunView extends Backbone.View
     @questions.fetch
       key: "q" + @model.get("assessmentId")
       success: (collection) =>
-        @questions = new Questions collection.where {"subtestId":@model.id} 
+        @questions = new Questions collection.where {"subtestId":@model.id}
         @questions.sort()
         @ready = true
         @render()
@@ -177,7 +177,7 @@ class SurveyRunView extends Backbone.View
           next = $(view.el).next()
           while next.length != 0 && next.hasClass("disabled_skipped")
             next = $(next).next()
-          
+
           # if it's not the last, scroll to it
           if next.length != 0
             next.scrollTo()
@@ -202,7 +202,7 @@ class SurveyRunView extends Backbone.View
           @autostopIndex = i
     @updateAutostop()
     @updateSkipLogic()
-  
+
   updateAutostop: ->
     autostopLimit = parseInt(@model.get("autostopLimit")) || 0
     for view, i in @questionViews
@@ -243,7 +243,7 @@ class SurveyRunView extends Backbone.View
 
   getSkipped: ->
     result = {}
-    result[@questions.models[i].get("name")] = "skipped" for qv, i in @questionViews
+    result[@questions.models[i].get("name")] = QuestionRunView.prototype.c.SKIPPED for qv, i in @questionViews
     return result
 
   getResult: =>
@@ -254,7 +254,7 @@ class SurveyRunView extends Backbone.View
           qv.notAskedResult
         else if not _.isEmpty(qv.answer) # use answer
           qv.answer
-        else if qv.skipped 
+        else if qv.skipped
           qv.skippedResult
         else if qv.$el.hasClass("disabled_skipped")
           qv.logicSkippedResult
@@ -310,8 +310,8 @@ class SurveyRunView extends Backbone.View
 
         name   = question.escape("name").replace /[^A-Za-z0-9_]/g, "-"
         answer = previous[name] if previous
-        
-        oneView = new QuestionRunView 
+
+        oneView = new QuestionRunView
           model         : question
           parent        : @
           dataEntry     : @dataEntry

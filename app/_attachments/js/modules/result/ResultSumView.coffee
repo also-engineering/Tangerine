@@ -8,11 +8,9 @@ class ResultSumView extends Backbone.View
   toggleDetails: ->
     @$el.find('.detail_box').toggle(250)
 
-
   i18n: ->
     @text =
       resume    : t("ResultSumView.button.resume")
-      noResults : t("ResultSumView.message.no_results")
 
   initialize: ( options ) ->
 

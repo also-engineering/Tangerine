@@ -2,7 +2,7 @@ class LocationEditView extends Backbone.View
 
   className: "LocationEditView"
 
-  events: 
+  events:
     'keyup #data'               : 'updateData'
     'keyup #levels'             : 'updateLevels'
     'click #data_format input'   : 'updateData'
@@ -11,7 +11,7 @@ class LocationEditView extends Backbone.View
 
   updateData: (event) ->
     if event?.type == "click"
-      if $(event.target).val() == "Tabs" 
+      if $(event.target).val() == "Tabs"
         @dataCommaToTab()
         hasTabs   = true
         hasCommas = false
@@ -19,7 +19,7 @@ class LocationEditView extends Backbone.View
         @dataTabToComma()
         hasTabs   = false
         hasCommas = true
-      
+
     else
       data = @$el.find("#data").val()
       hasTabs = data.match(/\t/g)?
@@ -32,7 +32,7 @@ class LocationEditView extends Backbone.View
 
   updateLevels: (event) ->
     if event?.type == "click"
-      if $(event.target).val() == "Tabs" 
+      if $(event.target).val() == "Tabs"
         @levelsCommaToTab()
         hasTabs   = true
         hasCommas = false
@@ -40,7 +40,7 @@ class LocationEditView extends Backbone.View
         @levelsTabToComma()
         hasTabs   = false
         hasCommas = true
-      
+
     else
       levels    = @$el.find("#levels").val()
       hasTabs   = levels.match(/\t/g)?
@@ -67,7 +67,7 @@ class LocationEditView extends Backbone.View
     if @$el.find("#levels").val().match(/\t/g)?
       @levelsTabToComma()
       @$el.find("#levels_format :radio[value='Tabs']").attr("checked", "checked").button("refresh")
-      
+
     levels = @$el.find("#levels").val().split(/, */g)
     for level, i in levels
       levels[i] = $.trim(level).replace(/[^a-zA-Z0-9']/g,"")
@@ -101,7 +101,7 @@ class LocationEditView extends Backbone.View
   initialize: ( options ) ->
     @errors = []
     @model = options.model
-    @errorMessages = 
+    @errorMessages =
       "column_match" : "Some columns in the location data do not match the number of columns in the geographic levels."
 
   render: ->
@@ -112,7 +112,7 @@ class LocationEditView extends Backbone.View
 
     locations = locations.join("\n")
     if _.isArray(locations)
-      for location, i in locations 
+      for location, i in locations
         locations[i] = _.escape(location.join(", "))
 
     @$el.html  "
@@ -140,7 +140,7 @@ class LocationEditView extends Backbone.View
             <label for='data_commas'>Commas</label>
             <input id='data_commas' name='data_format' type='radio' value='Commas'>
         </div>
-        
+
       </div>
     "
 

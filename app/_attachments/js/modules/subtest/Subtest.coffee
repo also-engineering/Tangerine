@@ -17,15 +17,14 @@ class Subtest extends Backbone.Model
       @set key, value
     @save()
 
-  copyTo: (options) ->
+  copyTo: (options) -> # @todo this should be refactored to use bulk docs
 
     assessmentId = options.assessmentId
     callback     = options.callback
     order        = options.order || 0
-    
-    newSubtest = @clone()
-    newId = Utils.guid()
 
+    newSubtest = new Subtest @attributes
+    newId = Utils.guid()
 
     if newSubtest.has("surveyAttributes")
       newSubtest.set "surveyAttributes",
@@ -47,13 +46,13 @@ class Subtest extends Backbone.Model
           success: (questionCollection) =>
             subtestQuestions = questionCollection.where "subtestId" : @id
 
-            doOne = -> 
+            doOne = ->
               question = subtestQuestions.pop()
               if question
-                newQuestion = question.clone()
+                newQuestion = new Question question.attributes
                 newQuestion.save
                   "assessmentId" : assessmentId
-                  "_id"          : Utils.guid() 
+                  "_id"          : Utils.guid()
                   "subtestId"    : newId
                 ,
                   success: ->

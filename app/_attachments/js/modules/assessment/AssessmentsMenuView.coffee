@@ -12,12 +12,15 @@ class AssessmentsMenuView extends Backbone.View
     'click .groups'      : 'gotoGroups'
     'click .universal_upload' : 'universalUpload'
 
+
     'click .sync_tablets' : 'syncTablets'
 
     'click .results'        : 'results'
     'click .settings'       : 'editInPlace'
     'keyup .edit_in_place'  : 'saveInPlace'
     'change .edit_in_place'  : 'saveInPlace'
+
+
 
   syncTablets: =>
     @tabletManager.sync()

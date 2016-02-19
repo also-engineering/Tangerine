@@ -38,14 +38,17 @@ Tangerine.locales["en-US"] =
         "page" : "Page"
         "per_page" : "per page"
       "button" :
+        "resume" : "Resume"
         "refresh" : "Refresh"
         "detect"  : "Detect options"
+      "message" :
+        "no_results" : "No results yet!"
 
     "ResultSumView" :
       "button" :
         "resume" : "Resume"
-      "message" :
-        "no_results" : "No results yet!"
+
+
 
     "SettingsView" :
       "message" :
@@ -80,6 +83,10 @@ Tangerine.locales["en-US"] =
         "save" : "Save result"
         "another" : "Perform another assessment"
 
+    "ResultSumView" :
+      "button" :
+        "resume" : "Resume"
+
 
     "AssessmentMenuView" :
       "button" :
@@ -87,7 +94,6 @@ Tangerine.locales["en-US"] =
         "import" : "Import"
         "apk" : "APK"
         "groups" : "Groups"
-        "universal_upload" : "Universal Upload"
         "sync_tablets" : "Sync tablets"
         "results" : "Results"
         "save" : "Save"
