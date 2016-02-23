@@ -109,10 +109,8 @@ class Router extends Backbone.Router
 
 
   sample: ->
-    console.log('router')
     Tangerine.user.verify
       isAuthenticated: ->
-        console.log('authed')
         view = new SampleView
         vm.show view
 
