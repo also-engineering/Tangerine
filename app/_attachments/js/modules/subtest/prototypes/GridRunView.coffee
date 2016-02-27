@@ -492,6 +492,9 @@ class GridRunView extends Backbone.View
 
     @$el.html html
 
+    if @layoutMode is "variable"
+      @$el.find(".grid_element").css("width", "auto")
+
     @modeButton?.setElement @$el.find ".mode-button"
     @modeButton?.render()
 
