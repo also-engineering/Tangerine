@@ -29,6 +29,12 @@ class LocationPrintView extends Backbone.View
         #{@locations.join("<br/>")}<br/>
       "
 
+    if @format is "metadata"
+      @$el.html "
+        School Locations<br/>
+        Levels: #{@levels}<br/>
+      "
+
     if @format is "backup"
 
       @$el.html "
