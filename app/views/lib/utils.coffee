@@ -2,13 +2,13 @@ gridValueMap =
     C : "1"   # correct
     I : "0"   # incorrect
     M : "."   # missing
-    S : "999" # skipped
+    S : ""    # skipped
 
 surveyValueMap =
     C : "1"   # checked
     U : "0"   # unchecked
     N : "."   # not asked
-    S : "999" # skipped
+    S : ""    # skipped
 
 
 translatedGridValue = ( databaseValue = "no_record" ) ->
