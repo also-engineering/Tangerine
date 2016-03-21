@@ -12,6 +12,9 @@ class Router extends Backbone.Router
 
     '' : 'landing'
 
+    'cases' : 'cases'
+    'case/:id' : 'editCase'
+
     'logs' : 'logs'
 
     # Class
@@ -63,6 +66,17 @@ class Router extends Backbone.Router
 
     'sync/:id'      : 'sync'
 
+  cases: ->
+    cases = new Cases
+    cases.fetch
+      success: ->
+        vm.show new CaseMenuView cases:cases
+
+  editCase: (id) ->
+    aCase = new Case "_id" : id
+    aCase.fetch
+      success: ->
+        vm.show new CaseEditView aCase: aCase
 
   admin: (options) ->
     Tangerine.user.verify

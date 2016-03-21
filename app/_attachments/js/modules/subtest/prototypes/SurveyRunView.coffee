@@ -6,6 +6,34 @@ class SurveyRunView extends Backbone.View
     'click .next_question' : 'nextQuestion'
     'click .prev_question' : 'prevQuestion'
 
+  avNext: =>
+    qv = @questionViews[@currentQuestion]
+    return @showErrors(qv) unless @isValid([qv])
+
+    qv.$el.find('.av-question').css('display', 'none')
+    @currentQuestion++
+    qv = @questionViews[@currentQuestion]
+    if @questionViews.length - 1 is @currentQuestion
+      qv.$el.find('.av-question').css('position', 'relative')
+
+    qv.startAv()
+    @updateQuestionProgress()
+
+  updateQuestionProgress: ->
+    qv = @questionViews[@currentQuestion]
+    qv.setProgress(@currentQuestion+1, @questionViews.length)
+
+  avPrev: =>
+    qv = @questionViews[@currentQuestion]
+    return @showErrors(qv) unless @isValid([qv])
+
+    qv.$el.find('.av-question').css('display', 'none')
+    @currentQuestion--
+    qv = @questionViews[@currentQuestion]
+
+    qv.$el.find('.av-question').css('display', 'block')
+    @updateQuestionProgress()
+
   nextQuestion: ->
 
     currentQuestionView = @questionViews[@questionIndex]
@@ -116,7 +144,7 @@ class SurveyRunView extends Backbone.View
 
     # trigger the question to run it's display code if the subtest's displaycode has already ran
     # if not, add it to a list to run later.
-    if @executeReady 
+    if @executeReady
       @questionViews[@questionIndex].trigger "show"
     else
       @triggerShowList = [] if not @triggerShowList
@@ -128,11 +156,11 @@ class SurveyRunView extends Backbone.View
     @updateProgressButtons()
 
   i18n: ->
-    @text = 
+    @text =
       pleaseAnswer : t("SurveyRunView.message.please_answer")
       correctErrors : t("SurveyRunView.message.correct_errors")
       notEnough : _(t("SurveyRunView.message.not_enough")).escape()
-      
+
       previousQuestion : t("SurveyRunView.button.previous_question")
       nextQuestion : t("SurveyRunView.button.next_question")
 
@@ -156,8 +184,10 @@ class SurveyRunView extends Backbone.View
     @questions.fetch
       key: "q" + @model.get("assessmentId")
       success: (collection) =>
-        @questions = new Questions collection.where {"subtestId":@model.id} 
+        @questions = new Questions collection.where {"subtestId":@model.id}
         @questions.sort()
+        if @questions.first().get("type") is "av"
+          @avMode = true
         @ready = true
         @render()
 
@@ -177,7 +207,7 @@ class SurveyRunView extends Backbone.View
           next = $(view.el).next()
           while next.length != 0 && next.hasClass("disabled_skipped")
             next = $(next).next()
-          
+
           # if it's not the last, scroll to it
           if next.length != 0
             next.scrollTo()
@@ -202,7 +232,7 @@ class SurveyRunView extends Backbone.View
           @autostopIndex = i
     @updateAutostop()
     @updateSkipLogic()
-  
+
   updateAutostop: ->
     autostopLimit = parseInt(@model.get("autostopLimit")) || 0
     for view, i in @questionViews
@@ -246,15 +276,26 @@ class SurveyRunView extends Backbone.View
     result[@questions.models[i].get("name")] = "skipped" for qv, i in @questionViews
     return result
 
+  addAvResult: (result, qv) ->
+    name = qv.model.get('name')
+    result["#{name}_response_time"] = qv.responseTime
+    result["#{name}_display_time"] = qv.displayTime
+    if qv.autoProgressTime?
+      result["#{name}_auto_progress_time"] = qv.autoProgressTime
+
+
   getResult: =>
     result = {}
     for qv, i in @questionViews
-      result[@questions.models[i].get("name")] =
+      if @questions.models[i].get('type') is 'av'
+        @addAvResult(result, qv)
+
+      result[@questions.models[i].get('name')] =
         if qv.notAsked # because of grid score
           qv.notAskedResult
         else if not _.isEmpty(qv.answer) # use answer
           qv.answer
-        else if qv.skipped 
+        else if qv.skipped
           qv.skippedResult
         else if qv.$el.hasClass("disabled_skipped")
           qv.logicSkippedResult
@@ -268,6 +309,7 @@ class SurveyRunView extends Backbone.View
     @$el.find('.message').remove()
     first = true
     views = [views] if not _.isArray(views)
+
     for qv, i in views
       if not _.isString(qv)
         message = ""
@@ -280,7 +322,7 @@ class SurveyRunView extends Backbone.View
           else
             message = @text.pleaseAnswer
 
-          if first == true
+          if first == true && qv.model.get('type') isnt 'av'
             @showQuestion(i) if views == @questionViews
             qv.$el.scrollTo()
             Utils.midAlert @text.correctErrors
@@ -310,8 +352,8 @@ class SurveyRunView extends Backbone.View
 
         name   = question.escape("name").replace /[^A-Za-z0-9_]/g, "-"
         answer = previous[name] if previous
-        
-        oneView = new QuestionRunView 
+
+        oneView = new QuestionRunView
           model         : question
           parent        : @
           dataEntry     : @dataEntry
@@ -321,6 +363,8 @@ class SurveyRunView extends Backbone.View
 
         oneView.on "rendered", @onQuestionRendered
         oneView.on "answer scroll", @onQuestionAnswer
+        oneView.on "av-next", @avNext
+        oneView.on "av-prev", @avPrev
 
         @questionViews[i] = oneView
         @$el.append oneView.el
@@ -348,7 +392,15 @@ class SurveyRunView extends Backbone.View
     if @renderCount == @questions.length
       @trigger "ready"
       @updateSkipLogic()
+      @avStart() if @avMode
     @trigger "subRendered"
+
+  avStart: ->
+    if @model.getString('studentDialog') isnt ''
+      Utils.sticky @model.get('studentDialog'), "Ok", =>
+        @currentQuestion = 0
+        @questionViews[@currentQuestion].startAv()
+        @updateQuestionProgress()
 
   onClose:->
     for qv in @questionViews

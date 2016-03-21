@@ -37,10 +37,10 @@ class SurveyEditView extends Backbone.View
     return false
 
   addQuestion: (event) ->
-    
+
     if event.type != "click" && event.which != 13
       return true
-    
+
     newAttributes = $.extend Tangerine.templates.get("questionTemplate"),
       subtestId    : @model.id
       assessmentId : @model.get "assessmentId"
@@ -92,15 +92,19 @@ class SurveyEditView extends Backbone.View
         variableNames[question.get("name")] = 0 if not _.isNumber(variableNames[question.get("name")])
         variableNames[question.get("name")]++
 
-      if question.get("type") != "open" && question.get("options")?.length == 0 && !~question.getString('displayCode').indexOf('setOptions')
+      noDynamicOptions = !~question.getString('displayCode').indexOf('setOptions')
+      noOptions = question.get("options")?.length == 0
+      isntOpen = question.get("type") != "open"
+      isntAv = question.get("type") != "av"
+      if isntOpen && noOptions && noDynamicOptions && isntAv
         emptyOptions.push i + 1
-      
+
         if options.questionSave
           if not question.save()
             notSaved.push i
           if question.has("linkedGridScore") && question.get("linkedGridScore") != "" && question.get("linkedGridScore") != 0 && @model.has("gridLinkId") == "" && @model.get("gridLinkId") == ""
             requiresGrid.push i
-        
+
     for name, count of variableNames
       duplicateVariables.push name if count != 1
 
@@ -133,7 +137,7 @@ class SurveyEditView extends Backbone.View
     @questionsEditView?.render()
 
   render: ->
-      
+
 #    addQuestionSelect = "<select id='add_question_select'>"
 #    for template in Tangerine.templates.optionTemplates
 #      addQuestionSelect += "<option value='#{template.name}'>#{template.name}</option>"
@@ -173,7 +177,7 @@ class SurveyEditView extends Backbone.View
               <input id='question_name' title='Allowed characters: A-Z, a-z, 0-9, and underscores.'><br>
               <button class='add_question_add command'>Add</button><button class='add_question_cancel command'>Cancel</button>
             </div>
-          </div> 
+          </div>
         </div>
       </div>"
 

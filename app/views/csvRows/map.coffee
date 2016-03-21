@@ -95,6 +95,8 @@ The only real behavior worth mentioning here is
     # simple prototypes
     if prototype == "id"
       result.push cell subtest, "id", subtest.data.participant_id
+    else if prototype == "case"
+      result.push cell subtest, "case", subtest.data.caseId
     else if prototype == "consent"
       result.push cell subtest, "consent", subtest.data.consent
 

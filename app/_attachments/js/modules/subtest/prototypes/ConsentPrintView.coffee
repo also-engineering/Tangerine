@@ -6,7 +6,7 @@ class ConsentPrintView extends Backbone.View
     @confirmedNonConsent = false
     @model  = options.model
     @parent = options.parent
-  
+
   render: ->
     return if @format is "stimuli"
     if @format is "content" or @format is "backup"

@@ -26,9 +26,9 @@ class AssessmentEditView extends Backbone.View
     if @updateModel()
       @model.save null,
         success: =>
-          Utils.midAlert "#{@model.get("name")} saved" 
+          Utils.midAlert "#{@model.get("name")} saved"
         error: =>
-          Utils.midAlert "Assessment save error. Please try again." 
+          Utils.midAlert "Assessment save error. Please try again."
 
   goBack: -> Tangerine.router.navigate "assessments", true
 
@@ -52,14 +52,14 @@ class AssessmentEditView extends Backbone.View
         sequence[j] = parseInt(element)
         rangeError = true if sequence[j] < 0 or sequence[j] >= subtestCount
         emptyError = true if isNaN(sequence[j])
-      
+
       sequences[i] = sequence
-      
+
       # detect errors
       tooManyError = true if sequence.length > subtestCount
       tooFewError  = true if sequence.length < subtestCount
       doublesError = true if sequence.length != _.uniq(sequence).length
-    
+
     # show errors if they exist and sequences exist
     if not _.isEmpty _.reject( _.flatten(sequences), (e) -> return isNaN(e)) # remove unparsable empties, don't _.compact. will remove 0s
       sequenceErrors = []
@@ -97,21 +97,21 @@ class AssessmentEditView extends Backbone.View
     false
 
   saveNewSubtest: (event) =>
-    
+
     if event.type != "click" && event.which != 13
       return true
-    
+
     # if no subtest type selected, show error
     if @$el.find("#subtest_type_select option:selected").val() == "none"
       Utils.midAlert "Please select a subtest type"
       return false
-    
+
     # general template
     newAttributes = Tangerine.templates.get("subtest")
-    
+
     # prototype template
     prototypeTemplate = Tangerine.templates.get("prototypes")[@$el.find("#subtest_type_select").val()]
-    
+
     # bit more specific template
     useType = @$el.find("#subtest_type_select :selected").attr 'data-template'
     useTypeTemplate = Tangerine.templates.get("subtestTemplates")[@$el.find("#subtest_type_select").val()][useType]
@@ -125,15 +125,15 @@ class AssessmentEditView extends Backbone.View
     newSubtest = @model.subtests.create newAttributes
     @toggleNewSubtestForm()
     return false
-  
+
   render: =>
     sequences = ""
-    if @model.has("sequences") 
+    if @model.has("sequences")
       sequences = @model.get("sequences")
       sequences = sequences.join("\n")
 
       if _.isArray(sequences)
-        for sequences, i in sequences 
+        for sequences, i in sequences
           sequences[i] = sequences.join(", ")
 
     subtestLegend = @updateSubtestLegend()
@@ -152,7 +152,7 @@ class AssessmentEditView extends Backbone.View
       subtestTypeSelect += "</optgroup>"
     subtestTypeSelect += "</select>"
 
-    
+
     @$el.html "
       <button class='back navigation'>Back</button>
         <h1>Assessment Builder</h1>
@@ -199,7 +199,7 @@ class AssessmentEditView extends Backbone.View
     # render new subtest views
     @subtestListEditView.setElement(@$el.find("#subtest_list"))
     @subtestListEditView.render()
-    
+
     # make it sortable
     @$el.find("#subtest_list").sortable
       handle : '.sortable_handle'
@@ -212,7 +212,7 @@ class AssessmentEditView extends Backbone.View
 
     @trigger "rendered"
 
-  
+
   updateSubtestLegend: =>
     subtestLegend = ""
     @model.subtests.each (subtest, i) ->
@@ -223,4 +223,4 @@ class AssessmentEditView extends Backbone.View
 
   onClose: ->
     @subtestListEditView.close()
-    
+

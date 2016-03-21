@@ -6,7 +6,7 @@
  * Requires
  */
 
-var fs  = require('fs'); // for writing files
+var fs  = require('fs');  // for writing files
 var del = require('del'); // for deleting files
 
 // gulp
@@ -309,6 +309,11 @@ conf.fileOrder = [
   'QuestionEditView',
   'QuestionsEditView',
   'QuestionsEditListElementView',
+  'AvEditView',
+
+  'Case',
+
+  'Memory',
 
   'Klass',
   'KlassView',

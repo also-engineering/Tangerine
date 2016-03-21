@@ -8,6 +8,12 @@
       "skippable"         : false
   },
   "prototypes" : {
+    "memory" : {
+      "prototype" : "memory"
+    },
+    "caseSelect" : {
+      "prototype" : "caseSelect"
+    },
     "grid" : {
       "prototype" : "grid",
       "items" : [],
@@ -44,10 +50,21 @@
       "prototype" : "gps"
     }
   },
-
   "subtestTemplates" : {
-    "gps":
-    {
+    "memory" : {
+      "Memory game": {
+        "gridHeight" : 2,
+        "gridWidth" : 2,
+        "trials" : 5
+      }
+    },
+    "caseSelect" : {
+      "Participant selection": {
+        "caseLabel" : "participant"
+      }
+    },
+
+    "gps": {
       "GPS Coordinates": {}
     },
     "consent" : {

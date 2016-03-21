@@ -290,12 +290,8 @@ class Assessment extends Backbone.Model
   destroy: =>
 
     # get all docs that belong to this assesssment except results
-    $.ajax
-      type: "POST"
-      contentType: "application/json; charset=UTF-8"
-      dataType: "json"
-      url: "/#{Tangerine.db_name}/_design/#{Tangerine.design_doc}/_view/byParentId"
-      data: JSON.stringify({ keys : ["s#{@id}","q#{@id}","a#{@id}"] })
+    Tangerine.$db.view('ojai/byParentId', {
+      keys : ["s#{@id}","q#{@id}","a#{@id}"]
       error: (xhr, status, err) ->
         Utils.midAlert "Delete error: 01";
         Tangerine.log.db("assessment-delete-error-01","Error: #{err}, Status: #{status}, xhr:#{xhr.responseText||'none'}. headers: #{xhr.getAllResponseHeaders()}")
@@ -322,6 +318,8 @@ class Assessment extends Backbone.Model
               @clear()
             else
               Utils.midAlert "Delete error: 03"; Tangerine.log.db("assessment-delete-error-03",JSON.stringify(arguments))
+
+    })
 
   isActive: -> return not @isArchived()
 
