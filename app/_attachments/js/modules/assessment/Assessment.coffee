@@ -14,7 +14,7 @@ class Assessment extends Backbone.Model
 
   # refactor to events
   verifyConnection: ( callbacks = {} ) =>
-    console.log "called"
+
     @timer = setTimeout(callbacks.error, @VERIFY_TIMEOUT) if callbacks.error?
     $.ajax
       url: Tangerine.settings.urlView("group", "byDKey")
@@ -70,13 +70,14 @@ class Assessment extends Backbone.Model
 
     localDKey = Tangerine.settings.location.group.db+Tangerine.settings.couch.view + "byDKey"
 
-    sourceDKey = "/"+sourceDB+"/"+Tangerine.settings.couch.view + "byDKey"
+    sourceDKey = "/db/"+sourceDB+"/"+Tangerine.settings.couch.view + "byDKey"
 
     $.ajax
       url: sourceDKey,
-      type: "GET"
-      dataType: "jsonp"
-      data: keys: JSON.stringify(dKeys)
+      type: "POST"
+      contentType: "application/json"
+      dataType: "json"
+      data: JSON.stringify(keys: dKeys)
       error: (a, b) => @trigger "status", "import error", "#{a} #{b}"
       success: (data) =>
         docList = []
@@ -290,8 +291,12 @@ class Assessment extends Backbone.Model
   destroy: =>
 
     # get all docs that belong to this assesssment except results
-    Tangerine.$db.view('ojai/byParentId', {
-      keys : ["s#{@id}","q#{@id}","a#{@id}"]
+    $.ajax
+      type: "POST"
+      contentType: "application/json; charset=UTF-8"
+      dataType: "json"
+      url: "/db/#{Tangerine.db_name}/_design/#{Tangerine.design_doc}/_view/byParentId"
+      data: JSON.stringify({ keys : ["s#{@id}","q#{@id}","a#{@id}"] })
       error: (xhr, status, err) ->
         Utils.midAlert "Delete error: 01";
         Tangerine.log.db("assessment-delete-error-01","Error: #{err}, Status: #{status}, xhr:#{xhr.responseText||'none'}. headers: #{xhr.getAllResponseHeaders()}")
@@ -318,8 +323,6 @@ class Assessment extends Backbone.Model
               @clear()
             else
               Utils.midAlert "Delete error: 03"; Tangerine.log.db("assessment-delete-error-03",JSON.stringify(arguments))
-
-    })
 
   isActive: -> return not @isArchived()
 
