@@ -326,7 +326,7 @@ AvEditView = Backbone.View.extend
     alignment = @layout().rows[y].columns[x].align
 
     optionsHtml = Question.AV_ALIGNMENT.map ( el, i ) ->
-      selected = 'selected' if content is i
+      selected = 'selected' if alignment is i
       "<option value='#{i}' #{selected||''}>#{el}</option>"
 
     noneSelected = if content is null then 'selected' else ''
