@@ -5,6 +5,7 @@ class SubtestEditView extends Backbone.View
   events:
     'click .back_button'         : 'goBack'
     'click .save_subtest'        : 'saveSubtest'
+    'change #input-sound'        : 'uploadInputSound'
 
     'click .richtext_edit'     : 'richtextEdit'
     'click .richtext_save'     : 'richtextSave'
@@ -27,7 +28,7 @@ class SubtestEditView extends Backbone.View
 
     @activity = null
     @timer = 0
-    
+
     @richtextKeys = _.pluck(@richtextConfig, "key")
 
     @model      = options.model
@@ -84,7 +85,7 @@ class SubtestEditView extends Backbone.View
     config = @getRichtextConfig event
 
     @$el.find(".#{config.dataKey}_preview, .#{config.dataKey}_edit, .#{config.dataKey}_buttons").fadeToggle(250)
-    
+
     @editor = {} if not @editor?
     @$el.find("textarea##{config.dataKey}_textarea").html(@model.escape(config.attributeName) || "")
     @editor[config.dataKey] = CKEDITOR.replace("#{config.dataKey}_textarea")
@@ -95,7 +96,7 @@ class SubtestEditView extends Backbone.View
     newAttributes = {}
     newAttributes[config.attributeName] = @editor[config.dataKey].getData()
 
-    @model.save newAttributes, 
+    @model.save newAttributes,
       success: =>
         @richtextCancel(config.dataKey)
       error: =>
@@ -166,6 +167,37 @@ class SubtestEditView extends Backbone.View
           return options.error() if options.error?
           Utils.midAlert "Save error"
 
+  renderInputSound: ->
+    audio  = @model.getObject('inputAudio',{name:'None'})
+    @$el.find('#input-sound-container').html "
+      <div class='menu_box'>
+        <label style='display:block;'>#{audio.name}</label>
+        <audio src='data:#{audio.type};base64,#{audio.data}' controls></audio>
+        <input id='input-sound' type='file'>
+      </div>
+    "
+
+  uploadInputSound: (e) ->
+    files = e.target.files
+    file = files[0]
+
+    if files && file
+      reader = new FileReader()
+
+      reader.onload = (readerEvt) =>
+        sound64 = btoa(readerEvt.target.result)
+
+        @model.save
+          inputAudio :
+            data : sound64
+            type : file.type
+            name : file.name
+        ,
+          success: =>
+            Utils.midAlert "Subtest saved."
+            @renderInputSound()
+
+      reader.readAsBinaryString(file)
 
   render: ->
     assessmentName = @assessment.escape "name"
@@ -274,6 +306,10 @@ class SubtestEditView extends Backbone.View
           <label for='font_family' title='Please be aware that whatever font is specified, must be available on the user`s system. When multiple fonts are entered separated by commas, they are ranked in order of preference from left to right. Font names with spaces must be wrapped in double quotes.'>Preferred font</label>
           <input id='font_family' value='#{fontFamily}'>
         </div>
+        <div class='label_value'>
+          <label for='input-sound' title='Sound to be played when a user interacts with the assessment.'>Input sound</label>
+          <div id='input-sound-container'></div>
+        </div>
         <div class='menu_box'>
           <div class='label_value'>
             <label for='display_code' title='This CoffeeScript code will be executed when this question is shown. This option may only be used when Focus Mode is on.'>Action on display</label>
@@ -289,7 +325,8 @@ class SubtestEditView extends Backbone.View
 
     @prototypeEditor.setElement @$el.find('#prototype_attributes')
     @prototypeEditor.render?()
-    
+    @renderInputSound()
+
     @trigger "rendered"
 
   afterRender: ->

@@ -53,7 +53,7 @@ class QuestionsEditListElementView extends Backbone.View
     if subtestId == "cancel"
       @$el.find(".copy_container").empty()
       return
-    newQuestion = @question.clone()
+    newQuestion = new Question(@question.attributes) # dangerous but ok
     newQuestion.save
       "_id"       : Utils.guid()
       "subtestId" : subtestId

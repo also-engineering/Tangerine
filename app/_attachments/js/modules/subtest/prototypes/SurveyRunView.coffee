@@ -12,9 +12,11 @@ class SurveyRunView extends Backbone.View
 
     qv.$el.find('.av-question').css('display', 'none')
     @currentQuestion++
+    if @questionViews.length is @currentQuestion
+      return @parent.next()
     qv = @questionViews[@currentQuestion]
-    if @questionViews.length - 1 is @currentQuestion
-      qv.$el.find('.av-question').css('position', 'relative')
+    #if @questionViews.length - 1 is @currentQuestion
+    #  qv.$el.find('.av-question').css('position', 'relative')
 
     qv.startAv()
     @updateQuestionProgress()
@@ -24,6 +26,7 @@ class SurveyRunView extends Backbone.View
     qv.setProgress(@currentQuestion+1, @questionViews.length)
 
   avPrev: =>
+    return if @currentQuestion == 0
     qv = @questionViews[@currentQuestion]
     return @showErrors(qv) unless @isValid([qv])
 
@@ -277,11 +280,12 @@ class SurveyRunView extends Backbone.View
     return result
 
   addAvResult: (result, qv) ->
+
     name = qv.model.get('name')
-    result["#{name}_response_time"] = qv.responseTime
+    result["#{name}_response_time"] = qv.responseTime || null
     result["#{name}_display_time"] = qv.displayTime
-    if qv.autoProgressTime?
-      result["#{name}_auto_progress_time"] = qv.autoProgressTime
+    if qv.forcedTime?
+      result["#{name}_forced_time"] = qv.forcedTime
 
 
   getResult: =>
@@ -365,6 +369,7 @@ class SurveyRunView extends Backbone.View
         oneView.on "answer scroll", @onQuestionAnswer
         oneView.on "av-next", @avNext
         oneView.on "av-prev", @avPrev
+        oneView.on 'abort', => @abort()
 
         @questionViews[i] = oneView
         @$el.append oneView.el
@@ -387,6 +392,9 @@ class SurveyRunView extends Backbone.View
 
     @trigger "rendered"
 
+  abort: ->
+    @trigger 'abort'
+
   onQuestionRendered: =>
     @renderCount++
     if @renderCount == @questions.length
@@ -396,11 +404,15 @@ class SurveyRunView extends Backbone.View
     @trigger "subRendered"
 
   avStart: ->
+    start = =>
+      @currentQuestion = 0
+      @questionViews[@currentQuestion].startAv()
+      @updateQuestionProgress()
+
     if @model.getString('studentDialog') isnt ''
-      Utils.sticky @model.get('studentDialog'), "Ok", =>
-        @currentQuestion = 0
-        @questionViews[@currentQuestion].startAv()
-        @updateQuestionProgress()
+      Utils.sticky @model.get('studentDialog'), "Ok", start
+    else
+      start()
 
   onClose:->
     for qv in @questionViews

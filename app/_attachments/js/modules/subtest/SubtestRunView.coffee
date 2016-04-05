@@ -69,6 +69,8 @@ class SubtestRunView extends Backbone.View
       @prototypeView.on "showNext",    => @showNext()
       @prototypeView.on "hideNext",    => @hideNext()
       @prototypeView.on "ready",       => @prototypeRendered = true;
+      @prototypeView.on "abort",       => @abort()
+
       @prototypeView.setElement(@$el.find('#prototype_wrapper'))
       @prototypeView.render()
 

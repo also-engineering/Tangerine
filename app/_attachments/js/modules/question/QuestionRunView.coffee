@@ -1,20 +1,43 @@
 class QuestionRunView extends Backbone.View
 
-  className: "question"
+  className: 'question'
 
   events:
     'change input'           : 'update'
     'change textarea'        : 'update'
-    'click .autoscroll_icon' : 'scroll'
     'click .av-controls-prev' : 'avPrev'
+    'click .autoscroll_icon' : 'scroll'
+    'click .av-controls-exit' : 'avExit'
     'click .av-controls-next' : 'avNext'
     'mousedown .av-button' : 'avButton'
+
+  avExit: ->
+    # reset the timer every time the button is pressed
+    if @exitTimerId?
+      clearTimeout @exitTimerId
+      @exitTimerId = setTimeout @cancelExit.bind(this), QuestionRunView.EXIT_TIMER
+    else
+      @exitTimerId = setTimeout @cancelExit.bind(this), QuestionRunView.EXIT_TIMER
+
+    @exitCount++
+    if @exitCount > 4
+      @abort()
+
+  abort: ->
+    @trigger 'abort'
+
+  cancelExit: ->
+    @exitCount = 0
+    @exitTimerId = null
+
+
 
   startAv: ->
     @$el.find('.av-question').css('display', 'block')
     @displayTime = (new Date()).getTime()
     @startProgressTimer() if @timeLimit isnt 0
     @startWarningTimer()  if @warningTime isnt 0
+    @resizeAvImages()
 
   stopTimers: ->
     clearTimeout(@warningTimerId)  if @warningTimerId?
@@ -41,22 +64,32 @@ class QuestionRunView extends Backbone.View
       @progressTimerId = setTimeout(@checkProgressTimer.bind(@), QuestionRunView.TIMER_INTERVAL)
 
   forceProgress: (elapsed) ->
-    @autoProgressTime = elapsed
+    @forcedTime = elapsed
     @isValid = true
+    @skipped = true
+    @model.set('skippable', true)
+    @answer = "skipped" if @answer is ""
     @trigger "av-next"
 
   avButton: (e) ->
-    @responseTime = (new Date).getTime() - @displayTime
-    @audio.play() if @audio?
+    time = (new Date).getTime() - @displayTime
     $target = $(e.target).parent('button')
-    @answer = $target.attr('data-value')
-    @updateValidity()
+    unless @responseTime
+      @responseTime = time
+      @audio.play() if @audio?
+      @answer = $target.attr('data-value')
+      @updateValidity()
 
+    @model.getString('transitionComment')
     if @isValid
       @trigger 'av-next' if @autoProgress
-      @setMessage(@model.get('transitionComment'))
+      if @model.getString('transitionComment') isnt ''
+        @setMessage(@model.getEscapedString('transitionComment'))
     else
-      return @setMessage(@model.get("customValidationMessage"))
+      if @model.getString('transitionComment') isnt ''
+        @setMessage(@model.getEscapedString('transitionComment'))
+
+      return @setMessage(@model.getEscapedString("customValidationMessage"))
 
     @trigger "answer", e, @model.get('order')
 
@@ -68,11 +101,21 @@ class QuestionRunView extends Backbone.View
   scroll: (event) ->
     @trigger "scroll", event, @model.get("order")
 
+  playDisplayAudio: () ->
+    @displayAudioObj.play()
+
   initialize: (options) ->
     @on "show", => @onShow()
     @model     = options.model
     @parent    = options.parent
-    @audio     = new Audio('pop.mp3')
+
+    @displayAudio = @model.getObject('displayAudio', false)
+    if @displayAudio
+      @displayAudioObj = new Audio("data:#{@displayAudio.type};base64,#{@displayAudio.data}")
+
+    @inputAudio = @parent.model.getObject('inputAudio', false)
+    if @inputAudio
+      @audio = new Audio("data:#{@inputAudio.type};base64,#{@inputAudio.data}")
     @dataEntry = options.dataEntry
     @fontFamily = @parent.model.get('fontFamily')
     @fontStyle = "style=\"font-family: #{@parent.model.get('fontFamily')} !important;\"" if @parent.model.get("fontFamily") != ""
@@ -113,8 +156,10 @@ class QuestionRunView extends Backbone.View
 
     @timeLimit      = @model.getNumber('timeLimit', 0)
     @warningTime    = @model.getNumber('warningTime', 0)
-    console.log("timelimit: #{@timeLimit}", "warningTime: #{@warningTime}")
     @warningMessage = @model.getEscapedString('warningMessage')
+    @autoProgress  = @model.getBoolean('autoProgress')
+    @exitTimerId   = null
+    @exitCount = 0
 
 
   previousAnswer: =>
@@ -183,7 +228,10 @@ class QuestionRunView extends Backbone.View
             when "single"
               if _.isEmptyString(@answer) || (_.isEmpty(@answer) && _.isObject(@answer)) then false else true
             when "av"
-              @answer isnt ""
+              hasTime = @timeLimit isnt 0
+              timeValid = (new Date).getTime - @displayTime >= @timeLimit
+              notEmpty = @answer isnt ""
+              notEmpty or (hasTime and timeValid)
 
   setOptions: (options) =>
     @button.options = options
@@ -253,96 +301,74 @@ class QuestionRunView extends Backbone.View
     else
       @$el.hide()
       @trigger "rendered"
+    @htmlAv()
 
+  htmlAv: ->
 
     #
     # Generate av question
     #
-    avHtml = ""
+    html = ""
     assets = @model.getArray('assets')
 
-    windowHeight = $(window).height()
+    windowHeight = $(window).height() - 200
+    console.log("win height: " +  windowHeight)
     windowWidth  = $(window).width()
-    @layout().rows.forEach (row) ->
+    @model.layout().rows.forEach (row) ->
 
       rowHtml = ''
-      row.columns.forEach (column) ->
-        asset = assets[column.cell]
+      row.columns.forEach (cell) ->
+        asset = assets[cell.content]
 
-        if column.cell != null
+        if cell.content != null
           imgHtml = "<button class='av-button' data-value='#{_.escape(asset.value)}'><img class='av-image' src='data:#{asset.type};base64,#{asset.imgData}'></button>"
         else
           imgHtml = ""
-        rowHtml += "<div style='margin:0;display: inline-block; width:#{windowWidth*(column.width/100)}px'; overflow:hidden'>#{imgHtml}</div>"
-      avHtml += "<div style='display:block; overflow:hidden; height:#{windowHeight*(row.height/100)}px'>#{rowHtml}</div>"
 
-    avHtml = "<style>
-    .av-question {
-      z-index: 999;
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      height: 100%;
-      width: 100%;
-      background: white;
-    }
-    .av-button {
-      outline: none;
-      background:none;
-      border: none;
-    }
-    .av-button:not(:active) {
-      transition: border 500ms step-end;
-    }
+        if cell.align != null
+          textAlign = "text-align: #{Question.AV_ALIGNMENT[cell.align]}"
+        else
+          textAlign = ''
 
-    .av-button:active {
-        border: 10px solid #af0;
-        border-radius: 10px;
-    }
-    .av-light {
-      font-size: 18px;
-      color: #aaa;
-      display: block;
-      clear: both;
-    }
-    .av-controls {
-      opacity: 0.2;
-    }
-    .av-controls-prev {
-      float:left;
-    }
-    .av-controls-next {
-      float:right;
-    }
+        rowHtml += "<div class='av-cell' style='height:#{windowHeight*(row.height/100)}px; width:#{windowWidth*(cell.width/100)}px;  #{textAlign}'>#{imgHtml}</div>"
+      html += "<div class='av-row' style='height:#{windowHeight*(row.height/100)}px'>#{rowHtml}</div>"
 
-    </style>
+    # wrap the old html variable
+    html = "
     <div class='av-controls'>
       <button class='av-controls-prev command'>&lt;</button>
+      <button class='av-controls-exit command'>x</button>
       <button class='av-controls-next command'>&gt;</button>
     </div>
 
     <div id='av-progress' class='av-light'></div>
     <div class='av-light av-prompt error_message'>#{@model.get('prompt')}</div>
-    #{avHtml}
+    <div class='av-layout'>#{html}</div>
     "
 
-    @$el.find("#container-#{@name}").html avHtml
-    @$el.find('img.av-image').on 'load', () ->
+    @$el.find("#container-#{@name}").html html
+
+    if @autoProgress
+      @$el.find('.av-controls')[0].style.opacity = 0
+
+    @resizeAvImages()
+
+  resizeAvImages: ->
+
+    @$el.find('img.av-image').each ->
       ratio  = $(@).width() / $(@).height()
       pratio = $(@).parent().width() / $(@).parent().height()
-      css = width:'100%', height:'auto'
-      css = width:'auto', height:'100%' if (ratio < pratio)
-      $(@).css(css)
+
+      if (ratio < pratio)
+        css = width:'auto', height:'100%'
+      else
+        css = width:'100%', height:'auto'
+
+      $(@).parent().css(css)
+
 
   setProgress: (current, total)->
     @$el.find("#av-progress").html "#{current}/#{total}"
-
-  layout: (obj) ->
-    if obj?
-      @model.set('layout', obj)
-    else
-      return @model.getObject('layout',{rows:[]})
 
   defineSpecialCaseResults: ->
     list = ["missing", "notAsked", "skipped", "logicSkipped", "notAskedAutostop"]
@@ -354,7 +380,9 @@ class QuestionRunView extends Backbone.View
         @[element+"Result"][@options[i].value] = element for option, i in @options
     return
 
-Object.defineProperty(QuestionRunView, "TIMER_INTERVAL", {
-  value: 50,
+Object.defineProperty QuestionRunView, "TIMER_INTERVAL",
+  value: 20, # 20 milliseconds
 
-});
+
+Object.defineProperty QuestionRunView, "EXIT_TIMER",
+  value: 5e3 # 5 seconds

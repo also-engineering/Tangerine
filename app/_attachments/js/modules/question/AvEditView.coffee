@@ -16,11 +16,16 @@ AvEditView = Backbone.View.extend
     'change .asset-value'     : 'changeAssetValue'
     'click .remove-asset'     : 'removeAsset'
 
+    'change #display-sound'        : 'uploadDisplaySound'
+
+
     'click button.layout-add-row'       : 'addRow'
     'click button.layout-remove-row'    : 'removeRow'
     'click button.layout-add-column'    : 'addColumn'
     'click button.layout-remove-column' : 'removeColumn'
-    'change select.layout-cell-content' : 'updateCell'
+    'change select.layout-cell-content' : 'updateCellContent'
+    'change select.layout-cell-align' : 'updateCellAlign'
+
     'change input.layout-column-width'  : 'updateColumnWidth'
     'change input.layout-row-height'    : 'updateRowHeight'
 
@@ -67,7 +72,7 @@ AvEditView = Backbone.View.extend
     row = @getNumber e, 'data-row'
     layout = @layout()
     layout.rows[row].columns = [] unless layout.rows[row].columns?
-    layout.rows[row].columns.push({width:10,cell:null})
+    layout.rows[row].columns.push({width:10,cell:{content:null, align:null}})
     @renderLayoutEditor()
 
 
@@ -79,7 +84,7 @@ AvEditView = Backbone.View.extend
     @layout layout
     @renderLayoutEditor()
 
-  updateCell: (e) ->
+  updateCellContent: (e) ->
     row    = @getNumber e, 'data-row'
     column = @getNumber e, 'data-column'
 
@@ -89,8 +94,23 @@ AvEditView = Backbone.View.extend
       value  = @getNumber e
 
     layout = @layout()
-    layout.rows[row].columns[column].cell = value
+    layout.rows[row].columns[column].content = value
     @updateGridPreview()
+
+
+  updateCellAlign: (e) ->
+    row    = @getNumber e, 'data-row'
+    column = @getNumber e, 'data-column'
+
+    if @getString(e) is "none"
+      value = null
+    else
+      value  = @getNumber e
+
+    layout = @layout()
+    layout.rows[row].columns[column].align = value
+    @updateGridPreview()
+
 
   updateColumnWidth: (e) ->
     row    = @getNumber e, 'data-row'
@@ -175,6 +195,7 @@ AvEditView = Backbone.View.extend
     @model.save null,
       success: =>
         Utils.midAlert "Question saved"
+        @updateGridPreview()
 
   removeAsset: (e) ->
     index = @getNumber e, 'data-index'
@@ -216,7 +237,7 @@ AvEditView = Backbone.View.extend
     else
       listHtml = @model.getArray('assets').map((el, i) ->
         "<tr>
-          <td><div class='image-container'><img class='asset-thumb' src='data:#{el.type};base64,#{el.imgData}'></div></td>
+          <td><div class='av-image-container'><img class='asset-thumb' src='data:#{el.type};base64,#{el.imgData}'></div></td>
           <td><input class='asset-name' data-index='#{i}' value='#{_(el.name).escape()}'></td>
           <td><input class='asset-value' data-index='#{i}' value='#{_(el.value).escape()}' placeholder='No value'></td>
           <td><button class='remove-asset command' data-index='#{i}'>Remove</button></td>
@@ -267,39 +288,53 @@ AvEditView = Backbone.View.extend
       return @model.getObject('layout',{rows:[]})
 
   # returns HTMl for the editor
-  editorHtml: ->
-
-    assets = @model.getArray('assets')
-    layout = @layout()
+  htmlEditor: ->
 
     # go through each row
-    return (layout.rows.map (row, y) =>
+    return (@layout().rows.map (row, y) =>
       return "<div>Row #{y+1}
-      <label class='input-box'>Height <input size='3' style='width: auto;' class='layout-row-height' data-row='#{y}' value='#{row.height}'>%</label>
+      <label class='av-input-box'>Height <input size='3' style='width: auto;' class='layout-row-height' data-row='#{y}' value='#{row.height}'>%</label>
       <button data-row='#{y}' class='layout-remove-row command'>Remove row</button>
       <button class='layout-add-column command' data-row='#{y}'>Add column</button></div>" +
       ((row.columns||[]).map (col, x) =>
 
-        cell = layout.rows[y].columns[x].cell
-
-        optionsHtml = assets.map ( el, i ) ->
-          selected = 'selected' if cell is i
-          "<option value='#{i}' #{selected||''}>#{el.name}</option>"
-
-        noneSelected = if cell is null then 'selected' else ''
-        optionsHtml = "<option value='none' #{noneSelected}>none</option>" + optionsHtml
-
-        cellSelector = "
-          <select class='layout-cell-content' data-row='#{y}' data-column='#{x}'>#{optionsHtml}</select>
-        "
         return "
           <div style='margin-left:10px;display: block;'>
-            <label class='input-box'>Width <input size='3' style='width: auto;' class='layout-column-width' data-row='#{y}' data-column='#{x}' value='#{col.width}'>%</label>
-            #{cellSelector}
+            <label class='av-input-box'>Width <input size='3' style='width: auto;' class='layout-column-width' data-row='#{y}' data-column='#{x}' value='#{col.width}'>%</label>
+            #{@htmlCellContentSelector(x, y)}
+            #{@htmlCellAlignSelector(x, y)}
             <button data-row='#{y}' data-column='#{x}' class='layout-remove-column command'>Remove</button>
           </div>"
       ).join('') # end of columns map
     ).join('') # end of rows map
+
+  htmlCellContentSelector: (x,y) ->
+    content = @layout().rows[y].columns[x].content
+
+    optionsHtml = @model.getArray('assets').map ( el, i ) ->
+      selected = 'selected' if content is i
+      "<option value='#{i}' #{selected||''}>#{el.name}</option>"
+
+    noneSelected = if content is null then 'selected' else ''
+    optionsHtml = "<option value='none' #{noneSelected}>none</option>" + optionsHtml
+
+    return "
+      <select class='layout-cell-content' data-row='#{y}' data-column='#{x}'>#{optionsHtml}</select>
+    "
+
+  htmlCellAlignSelector: (x,y) ->
+    alignment = @layout().rows[y].columns[x].align
+
+    optionsHtml = Question.AV_ALIGNMENT.map ( el, i ) ->
+      selected = 'selected' if content is i
+      "<option value='#{i}' #{selected||''}>#{el}</option>"
+
+    noneSelected = if content is null then 'selected' else ''
+    optionsHtml = "<option value='none' #{noneSelected}>none</option>" + optionsHtml
+
+    return "
+      <select class='layout-cell-align' data-row='#{y}' data-column='#{x}'>#{optionsHtml}</select>
+    "
 
   renderLayoutEditor: ->
     layout  = @layout()
@@ -309,7 +344,7 @@ AvEditView = Backbone.View.extend
     @$el.find('#layout-editor').html "
       <h3>Grid editor</h3>
       <button class='command layout-add-row'>Add row</button>
-      <section>#{@editorHtml()}</section>
+      <section>#{@htmlEditor()}</section>
       <h3>Preview</h3>
       <section id='grid-preview' style='height:480px;width:640px;'></section>
     "
@@ -326,27 +361,69 @@ AvEditView = Backbone.View.extend
     @layout().rows.forEach (row, i) ->
 
       rowHtml = ''
-      row.columns.forEach (column) ->
-        asset = assets[column.cell]
+      row.columns.forEach (cell, i) ->
+        asset = assets[cell.content]
 
-        if column.cell != null
+        if cell.content != null
           imgHtml = "<img class='preview-thumb' src='data:#{asset.type};base64,#{asset.imgData}'>"
         else
           imgHtml = "<br>no image"
-        rowHtml += "<div style='margin:0;display: inline-block; border:solid red 1px; width:#{640*(column.width/100)}px'; overflow:hidden'> <span class='dimension-overylay'>Width #{column.width}%</span> #{imgHtml}</div>"
-      previewGridHtml += "<div style='border: 1px green solid; display:block; overflow:hidden; height:#{480*(row.height/100)}px'><span class='dimension-overylay'>Row Height #{row.height}</span>#{rowHtml}</div>"
+
+        if cell.align != null
+          textAlign = "text-align: #{Question.AV_ALIGNMENT[cell.align]}"
+        else
+          textAlign = ''
+
+        rowHtml += "<div style='margin:0; position:relative; z-index: 999; display: inline-block; border:solid red 1px; height:#{480*(row.height/100)}px;width:#{640*(cell.width/100)}px; overflow:hidden; #{textAlign}'> <span class='dimension-overylay width-overlay'>Width #{cell.width}% <br> #{asset?.name || ''}<br>#{asset?.value||''}</span> #{imgHtml}</div>"
+      previewGridHtml += "<div style='border: 1px green solid; display:block; overflow:hidden; height:#{480*(row.height/100)}px'><span class='dimension-overylay' style='z-index:9999;'>Row Height #{row.height}%</span>#{rowHtml}</div>"
 
     return previewGridHtml
 
   updateGridPreview: ->
 
     @$el.find("#grid-preview").html @htmlGridPreview()
-    @$el.find('img.preview-thumb').on 'load', () ->
-      ratio  = $(@).width() / $(@).height()
-      pratio = $(@).parent().width() / $(@).parent().height()
-      css = width:'100%', height:'auto'
-      css = width:'auto', height:'100%' if (ratio < pratio)
-      $(@).css(css)
+    @$el.find('img.preview-thumb').each ->
+      $(@).on 'load', ->
+        ratio  = $(@).width() / $(@).height()
+        pratio = $(@).parent().width() / $(@).parent().height()
+
+        css = width:'100%', height:'auto'
+        css = width:'auto', height:'100%' if (ratio < pratio)
+        $(@).css(css)
+
+  renderDisplaySound: ->
+    audio  = @model.getObject('displaySound',{name:'None'})
+    @$el.find('#display-sound-container').html "
+      <div class='menu_box'>
+        <label style='display:block;'>#{audio.name}</label>
+        <audio src='data:#{audio.type};base64,#{audio.data}' controls></audio>
+        <input id='display-sound' type='file'>
+      </div>
+    "
+
+  uploadDisplaySound: (e) ->
+    files = e.target.files
+    file = files[0]
+
+    if files && file
+      reader = new FileReader()
+
+      reader.onload = (readerEvt) =>
+        sound64 = btoa(readerEvt.target.result)
+
+        @model.save
+          inputAudio :
+            data : sound64
+            type : file.type
+            name : file.name
+        ,
+          success: =>
+            Utils.midAlert "Subtest saved."
+            @renderInputSound()
+
+      reader.readAsBinaryString(file)
+
+
 
   render: ->
 
@@ -361,44 +438,12 @@ AvEditView = Backbone.View.extend
     warningMessage = @model.getEscapedString('warningMessage')
 
     @$el.html "
-      <style>
-      .image-container {
-        width: 100px;
-        height: 100px;
-        display: inline-block;
-        background-color: white;
-      }
-      #asset-table {
-        background-color: #eee;
-      }
-      #asset-table td,
-      #asset-table th {
-        padding: 5px;
-      }
-      #asset-table input {
-        margin-top: 15px;
-      }
-      .input-box {
-        display: inline;
-        border: 1px solid #aaa;
-        border-radius: 3px;
-        padding: 5px;
-        font-weight: normal;
-        margin: 0;
-      }
-      .input-box input {
-        border: none;
-        background-color: #eee;
-      }
-      .dimension-overylay {
-        position: absolute;
-        background-color: rgba(0,0,0,.4);
-        color: white;
-        font-weight: bold;
-      }
-      </style>
       <h3>AV Editor</h3>
 
+        <div class='label_value'>
+          <label for='display-sound' title='Sound to be played when the question is displayed.'>Display sound</label>
+          <div id='display-sound-container'></div>
+        </div>
         <table>
           <tr>
             <td><label for='delay'>Delay</label></td>
@@ -463,5 +508,4 @@ AvEditView = Backbone.View.extend
   # just for consistency, getAttribute always returns a string
   getString: (target, attribute) ->
     return @getAttribute( target, attribute )
-
 
