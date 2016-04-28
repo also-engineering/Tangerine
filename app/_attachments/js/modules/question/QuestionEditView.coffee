@@ -239,6 +239,7 @@ class QuestionEditView extends Backbone.View
     else if type is 'av'
       avEditor = new AvEditView
         model : @question
+        subtest : @subtest
       @$el.append "<div id='av-editor'></div>"
       avEditor.setElement(@$el.find('#av-editor')).render()
 

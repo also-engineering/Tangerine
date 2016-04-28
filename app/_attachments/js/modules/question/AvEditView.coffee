@@ -9,14 +9,13 @@ AvEditView = Backbone.View.extend
     'change #time-limit'         : 'updateTimeLimit'
     'change #warning-time'    : 'updateWarningTime'
     'change #warning-message' : 'updateWarningMessage'
-    'change input[type=file]' : 'updateFiles'
+
     'change select#stimulus'  : 'updateStimulus'
-    'change input.asset'      : 'updateAssets'
-    'change .asset-name'      : 'changeAssetName'
-    'change .asset-value'     : 'changeAssetValue'
+    'change .asset-value'     : 'changeAssetMapValue'
     'click .remove-asset'     : 'removeAsset'
 
     'change #display-sound'        : 'uploadDisplaySound'
+    'click #remove-display-sound' : 'removeDisplaySound'
 
 
     'click button.layout-add-row'       : 'addRow'
@@ -31,6 +30,7 @@ AvEditView = Backbone.View.extend
 
   initialize: (options) ->
     @model = options.model
+    @subtest = options.subtest
 
   updateDelay: ->
     @model.set('delay', parseInt(@$el.find('#delay').val()))
@@ -56,21 +56,21 @@ AvEditView = Backbone.View.extend
     # most editors @model.set everything
 
   addRow: (e) ->
-    layout = @layout()
+    layout = @model.layout()
     layout.rows.push({height:10,columns:[]})
-    @layout(layout)
+    @model.layout(layout)
     @renderLayoutEditor()
 
   removeRow: (e) ->
     row = @getNumber e, 'data-row'
-    layout = @layout()
+    layout = @model.layout()
     layout.rows.splice(row, 1)
-    @layout layout
+    @model.layout layout
     @renderLayoutEditor()
 
   addColumn: (e) ->
     row = @getNumber e, 'data-row'
-    layout = @layout()
+    layout = @model.layout()
     layout.rows[row].columns = [] unless layout.rows[row].columns?
     layout.rows[row].columns.push({width:10,cell:{content:null, align:null}})
     @renderLayoutEditor()
@@ -79,9 +79,9 @@ AvEditView = Backbone.View.extend
   removeColumn: (e) ->
     column = @getNumber e, 'data-column'
     row = @getNumber e, 'data-row'
-    layout = @layout()
+    layout = @model.layout()
     layout.rows[row].columns.splice(column, 1)
-    @layout layout
+    @model.layout layout
     @renderLayoutEditor()
 
   updateCellContent: (e) ->
@@ -93,7 +93,7 @@ AvEditView = Backbone.View.extend
     else
       value  = @getNumber e
 
-    layout = @layout()
+    layout = @model.layout()
     layout.rows[row].columns[column].content = value
     @updateGridPreview()
 
@@ -107,7 +107,7 @@ AvEditView = Backbone.View.extend
     else
       value  = @getNumber e
 
-    layout = @layout()
+    layout = @model.layout()
     layout.rows[row].columns[column].align = value
     @updateGridPreview()
 
@@ -116,35 +116,19 @@ AvEditView = Backbone.View.extend
     row    = @getNumber e, 'data-row'
     column = @getNumber e, 'data-column'
     value  = @getNumber e
-    layout = @layout()
+    layout = @model.layout()
     layout.rows[row].columns[column].width = value
-    @layout layout
+    @model.layout layout
     @updateGridPreview()
 
 
   updateRowHeight: (e) ->
     row    = @getNumber e, 'data-row'
     value  = @getNumber e
-    layout = @layout()
+    layout = @model.layout()
     layout.rows[row].height = value
-    @layout layout
+    @model.layout layout
     @updateGridPreview()
-
-  updateFiles: (e) ->
-    files = e.target.files
-    file = files[0]
-
-    if files && file
-      reader = new FileReader()
-
-      reader.onload = (readerEvt) =>
-        img64 = btoa(readerEvt.target.result)
-        @addAsset
-          name    : file.name
-          imgData : img64
-          type    : file.type
-
-      reader.readAsBinaryString(file)
 
   renderStimulusEditor: ->
     stimulus = @model.getNumber('stimulus', null)
@@ -170,24 +154,15 @@ AvEditView = Backbone.View.extend
     stimulus = @getString(e)
     @model.set "stimulus", stimulus
 
-  # when an asset's name is changed
-  changeAssetName: (e) ->
-    index = @getNumber e, 'data-index'
-    name = @getString e
 
-    assets = @model.getArray('assets')
-    assets[index].name = name
-    @model.set('assets', assets)
-    @saveQuestion()
-
-
-  changeAssetValue: (e) ->
+  changeAssetMapValue: (e) ->
     index = @getNumber e, 'data-index'
     value = @getString e
 
-    assets = @model.getArray('assets')
-    assets[index].value = value
-    @model.set('assets', assets)
+    assetMap = @model.getObject('assetMap', {})
+    assetMap[index] = value
+    @model.set('assetMap', assetMap)
+
     @saveQuestion()
 
   # save question. called when an asset is changed. Seems important to save then.
@@ -214,35 +189,20 @@ AvEditView = Backbone.View.extend
     # update screen
     @renderAssetManager()
 
-  addAsset: (asset) ->
-    # clean
-    newAsset =
-      name    : asset.name
-      imgData : asset.imgData
-      type    : asset.type
-
-    # update model
-    assets = @model.getArray("assets")
-    assets.push(newAsset)
-    @model.set("assets", assets)
-    @saveQuestion()
-
-    # update screen
-    @renderAssetManager()
-
   renderAssetManager: ->
 
-    if @model.getArray('assets').length is 0
+    assets = @subtest.getArray('assets')
+    assetMap = @model.getObject('assetMap')
+    if assets.length is 0
       listHtml = '<p>Nothing uploaded yet.</p>'
     else
-      listHtml = @model.getArray('assets').map((el, i) ->
+      listHtml = assets.map((el, i) ->
         "<tr>
           <td><div class='av-image-container'><img class='asset-thumb' src='data:#{el.type};base64,#{el.imgData}'></div></td>
-          <td><input class='asset-name' data-index='#{i}' value='#{_(el.name).escape()}'></td>
-          <td><input class='asset-value' data-index='#{i}' value='#{_(el.value).escape()}' placeholder='No value'></td>
-          <td><button class='remove-asset command' data-index='#{i}'>Remove</button></td>
+          <td>#{_(el.name).escape()}</td>
+          <td><input class='asset-value' data-index='#{i}' value='#{_(assetMap[i]||'').escape()}' placeholder='No value'></td>
         </tr>"
-      ).join('')
+      , @).join('')
 
       listHtml = "
         <table id='asset-table'>
@@ -254,7 +214,6 @@ AvEditView = Backbone.View.extend
     @$el.find('#asset-manager').html "
       <section>
       <h3>Assets</h3>
-        <input id='asset-file' type='file' accept='image/gif, image/jpeg, image/png, audio/mpeg' style='border: none;font-size: 16px;'>
         #{listHtml}
       </section>
     "
@@ -277,21 +236,12 @@ AvEditView = Backbone.View.extend
       else
         $(@).parent().height($(@).height())
 
-  # helper mutator/accessor function
-  # makes returning a vlid object more consise and sets for convenience
-  layout: (obj) ->
-    if obj?
-      # technically not necessary since the object is passed via reference
-      # but it feels good to explicitly set the layout
-      @model.set('layout', obj)
-    else
-      return @model.getObject('layout',{rows:[]})
 
   # returns HTMl for the editor
   htmlEditor: ->
 
     # go through each row
-    return (@layout().rows.map (row, y) =>
+    return (@model.layout().rows.map (row, y) =>
       return "<div>Row #{y+1}
       <label class='av-input-box'>Height <input size='3' style='width: auto;' class='layout-row-height' data-row='#{y}' value='#{row.height}'>%</label>
       <button data-row='#{y}' class='layout-remove-row command'>Remove row</button>
@@ -309,9 +259,9 @@ AvEditView = Backbone.View.extend
     ).join('') # end of rows map
 
   htmlCellContentSelector: (x,y) ->
-    content = @layout().rows[y].columns[x].content
+    content = @model.layout().rows[y].columns[x].content
 
-    optionsHtml = @model.getArray('assets').map ( el, i ) ->
+    optionsHtml = @subtest.getArray('assets').map ( el, i ) ->
       selected = 'selected' if content is i
       "<option value='#{i}' #{selected||''}>#{el.name}</option>"
 
@@ -323,7 +273,7 @@ AvEditView = Backbone.View.extend
     "
 
   htmlCellAlignSelector: (x,y) ->
-    alignment = @layout().rows[y].columns[x].align
+    alignment = @model.layout().rows[y].columns[x].align
 
     optionsHtml = Question.AV_ALIGNMENT.map ( el, i ) ->
       selected = 'selected' if alignment is i
@@ -337,7 +287,7 @@ AvEditView = Backbone.View.extend
     "
 
   renderLayoutEditor: ->
-    layout  = @layout()
+    layout  = @model.layout()
 
     stimulus = @model.getNumber('stimulus', null)
 
@@ -356,11 +306,14 @@ AvEditView = Backbone.View.extend
     # Generate preview
     #
     previewGridHtml = ""
-    assets = @model.getArray('assets')
 
-    @layout().rows.forEach (row, i) ->
+    assetMap = @model.getObject('assetMap')
+    assets = @subtest.getArray('assets')
+
+    @model.layout().rows.forEach (row, i) ->
 
       rowHtml = ''
+
       row.columns.forEach (cell, i) ->
         asset = assets[cell.content]
 
@@ -374,9 +327,8 @@ AvEditView = Backbone.View.extend
         else
           textAlign = ''
 
-        rowHtml += "<div style='margin:0; position:relative; z-index: 999; display: inline-block; border:solid red 1px; height:#{480*(row.height/100)}px;width:#{640*(cell.width/100)}px; overflow:hidden; #{textAlign}'> <span class='dimension-overylay width-overlay'>Width #{cell.width}% <br> #{asset?.name || ''}<br>#{asset?.value||''}</span> #{imgHtml}</div>"
+        rowHtml += "<div style='margin:0; position:relative; z-index: 999; display: inline-block; border:solid red 1px; height:#{480*(row.height/100)}px;width:#{640*(cell.width/100)}px; overflow:hidden; #{textAlign}'> <span class='dimension-overylay width-overlay'>Width #{cell.width}% <br> #{asset?.name || ''}<br>#{assetMap[cell.content]||''}</span> #{imgHtml}</div>"
       previewGridHtml += "<div style='border: 1px green solid; display:block; overflow:hidden; height:#{480*(row.height/100)}px'><span class='dimension-overylay' style='z-index:9999;'>Row Height #{row.height}%</span>#{rowHtml}</div>"
-
     return previewGridHtml
 
   updateGridPreview: ->
@@ -385,21 +337,11 @@ AvEditView = Backbone.View.extend
     @$el.find('img.preview-thumb').each ->
       $(@).on 'load', ->
         ratio  = $(@).width() / $(@).height()
-        pratio = $(@).parent().width() / $(@).parent().height()
+        pratio = $(@).parent().parent().width() / $(@).parent().parent().height()
 
         css = width:'100%', height:'auto'
         css = width:'auto', height:'100%' if (ratio < pratio)
         $(@).css(css)
-
-  renderDisplaySound: ->
-    audio  = @model.getObject('displaySound',{name:'None'})
-    @$el.find('#display-sound-container').html "
-      <div class='menu_box'>
-        <label style='display:block;'>#{audio.name}</label>
-        <audio src='data:#{audio.type};base64,#{audio.data}' controls></audio>
-        <input id='display-sound' type='file'>
-      </div>
-    "
 
   uploadDisplaySound: (e) ->
     files = e.target.files
@@ -412,16 +354,32 @@ AvEditView = Backbone.View.extend
         sound64 = btoa(readerEvt.target.result)
 
         @model.save
-          inputAudio :
+          displaySound :
             data : sound64
             type : file.type
             name : file.name
         ,
           success: =>
             Utils.midAlert "Subtest saved."
-            @renderInputSound()
+            @renderDisplaySound()
 
       reader.readAsBinaryString(file)
+
+  removeDisplaySound: ->
+    @model.unset('displaySound').save null,
+      success: =>
+        @renderDisplaySound()
+
+  renderDisplaySound: ->
+    audio = @model.getObject('displaySound',{name:'None'})
+    @$el.find('#display-sound-container').html "
+      <div class='menu_box'>
+        <label style='display:block;'>#{audio.name}</label>
+        <audio src='data:#{audio.type};base64,#{audio.data}' controls></audio>
+        <input id='display-sound' type='file'>
+        <button id='remove-display-sound' class='command'>Remove</button>
+      </div>
+    "
 
 
 
@@ -482,6 +440,7 @@ AvEditView = Backbone.View.extend
     @renderStimulusEditor()
     @renderAssetManager()
     @renderLayoutEditor()
+    @renderDisplaySound()
 
   # Utility to get the value or attribute contained in a dom element.
   # See: @getNumber and @getString

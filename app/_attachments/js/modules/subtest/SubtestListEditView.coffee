@@ -3,7 +3,7 @@ class SubtestListEditView extends Backbone.View
   className: "SubtestListEditView"
 
   tagName : "ul"
-  
+
   initialize: (options) ->
     @assessment = options.assessment
     @views = []
@@ -24,9 +24,9 @@ class SubtestListEditView extends Backbone.View
     Utils.midAlert "Copying..."
     subtests = @views.filter( (view) -> view.selected == true ).map( (view) -> view.model )
 
-    if subtests.length is 0 
+    if subtests.length is 0
       subtests = [@assessment.subtests.get(subtestId)]
-    
+
     targetSubtestCount = 0
     (new Subtests).fetch
       key: "s" + targetAssessmentId
@@ -38,7 +38,7 @@ class SubtestListEditView extends Backbone.View
           if subtests.length
             subtest = subtests.shift()
             newSubtestCount++
-            subtest.copyTo 
+            subtest.copyTo
               assessmentId : targetAssessmentId
               order: targetSubtestCount + newSubtestCount
               callback: -> doOne()
@@ -49,7 +49,7 @@ class SubtestListEditView extends Backbone.View
   deleteSubtest: (subtest) =>
     @assessment.subtests.remove subtest
     subtest.destroy()
-    
+
   closeViews: ->
     for view in @views
       view.close()

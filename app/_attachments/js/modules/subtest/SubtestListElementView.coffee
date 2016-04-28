@@ -3,7 +3,7 @@ class SubtestListElementView extends Backbone.View
   className : "subtest_element"
   tagName : "li"
 
-  events: 
+  events:
     'click .icon_edit'     : 'edit'
     "click .icon_delete"   : "toggleDeleteConfirm"
     "click .delete_cancel" : "toggleDeleteConfirm"
@@ -48,17 +48,17 @@ class SubtestListElementView extends Backbone.View
       key: @group
       success: =>
         @populateAssessmentSelector()
-  
+
   populateAssessmentSelector: =>
     optionList = ""
     for assessment in @groupAssessments.models
       optionList += "<option data-assessmentId='#{assessment.id}'>#{assessment.get("name")}</option>"
     $select = @$el.find(".copy_select").html(optionList)
-      
+
   doCopy: (e) ->
     @trigger "subtest:copy", @$el.find(".copy_select :selected").attr('data-assessmentId'), @model.id
     @$el.find(".copy_menu").addClass("confirmation")
-    
+
   cancelCopy: ->
     @$el.find(".copy_menu").addClass("confirmation")
 

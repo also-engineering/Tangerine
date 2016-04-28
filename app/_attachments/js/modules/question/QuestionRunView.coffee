@@ -33,11 +33,15 @@ class QuestionRunView extends Backbone.View
 
 
   startAv: ->
-    @$el.find('.av-question').css('display', 'block')
+    @$el.find('.av-question').css
+      'display': 'block'
+    @resizeAvImages()
+
     @displayTime = (new Date()).getTime()
     @startProgressTimer() if @timeLimit isnt 0
     @startWarningTimer()  if @warningTime isnt 0
-    @resizeAvImages()
+    @playDisplaySound()
+
 
   stopTimers: ->
     clearTimeout(@warningTimerId)  if @warningTimerId?
@@ -64,6 +68,9 @@ class QuestionRunView extends Backbone.View
       @progressTimerId = setTimeout(@checkProgressTimer.bind(@), QuestionRunView.TIMER_INTERVAL)
 
   forceProgress: (elapsed) ->
+    clearTimeout(@progressTimerId) if @progressTimerId?
+    clearTimeout(@warningTimerId) if @warningTimerId?
+
     @forcedTime = elapsed
     @isValid = true
     @skipped = true
@@ -82,7 +89,11 @@ class QuestionRunView extends Backbone.View
 
     @model.getString('transitionComment')
     if @isValid
-      @trigger 'av-next' if @autoProgress
+      if @autoProgress
+        clearTimeout(@progressTimerId) if @progressTimerId?
+        clearTimeout(@warningTimerId) if @warningTimerId?
+        @trigger 'av-next'
+
       if @model.getString('transitionComment') isnt ''
         @setMessage(@model.getEscapedString('transitionComment'))
     else
@@ -98,24 +109,28 @@ class QuestionRunView extends Backbone.View
   avNext: ->
     @trigger "av-next"
 
+
+  playDisplaySound: () =>
+    @displaySoundObj?.play()
+
+
   scroll: (event) ->
     @trigger "scroll", event, @model.get("order")
 
-  playDisplayAudio: () ->
-    @displayAudioObj.play()
 
   initialize: (options) ->
     @on "show", => @onShow()
     @model     = options.model
     @parent    = options.parent
 
-    @displayAudio = @model.getObject('displayAudio', false)
-    if @displayAudio
-      @displayAudioObj = new Audio("data:#{@displayAudio.type};base64,#{@displayAudio.data}")
+    @displaySound = @model.getObject('displaySound', false)
+    if @displaySound
+      @displaySoundObj = new Audio("data:#{@displaySound.type};base64,#{@displaySound.data}")
 
     @inputAudio = @parent.model.getObject('inputAudio', false)
     if @inputAudio
       @audio = new Audio("data:#{@inputAudio.type};base64,#{@inputAudio.data}")
+
     @dataEntry = options.dataEntry
     @fontFamily = @parent.model.get('fontFamily')
     @fontStyle = "style=\"font-family: #{@parent.model.get('fontFamily')} !important;\"" if @parent.model.get("fontFamily") != ""
@@ -301,7 +316,7 @@ class QuestionRunView extends Backbone.View
     else
       @$el.hide()
       @trigger "rendered"
-    @htmlAv()
+    @htmlAv() if @type is 'av'
 
   htmlAv: ->
 
@@ -309,10 +324,10 @@ class QuestionRunView extends Backbone.View
     # Generate av question
     #
     html = ""
-    assets = @model.getArray('assets')
+    assets = @parent.model.getArray('assets')
+    assetMap = @model.getObject('assetMap')
 
     windowHeight = $(window).height() - 200
-    console.log("win height: " +  windowHeight)
     windowWidth  = $(window).width()
     @model.layout().rows.forEach (row) ->
 
@@ -321,7 +336,7 @@ class QuestionRunView extends Backbone.View
         asset = assets[cell.content]
 
         if cell.content != null
-          imgHtml = "<button class='av-button' data-value='#{_.escape(asset.value)}'><img class='av-image' src='data:#{asset.type};base64,#{asset.imgData}'></button>"
+          imgHtml = "<button class='av-button' data-value='#{_.escape(assetMap[cell.content]||'')}'><img class='av-image' src='data:#{asset.type};base64,#{asset.imgData}'></button>"
         else
           imgHtml = ""
 
@@ -330,7 +345,7 @@ class QuestionRunView extends Backbone.View
         else
           textAlign = ''
 
-        rowHtml += "<div class='av-cell' style='height:#{windowHeight*(row.height/100)}px; width:#{windowWidth*(cell.width/100)}px;  #{textAlign}'>#{imgHtml}</div>"
+        rowHtml += "<div class='av-cell' style='display:inline-block; height:#{windowHeight*(row.height/100)}px; width:#{windowWidth*(cell.width/100)}px;  #{textAlign}'>#{imgHtml}</div>"
       html += "<div class='av-row' style='height:#{windowHeight*(row.height/100)}px'>#{rowHtml}</div>"
 
     # wrap the old html variable
@@ -347,24 +362,23 @@ class QuestionRunView extends Backbone.View
     "
 
     @$el.find("#container-#{@name}").html html
-
-    if @autoProgress
+    if @autoProgress or @timeLimit
       @$el.find('.av-controls')[0].style.opacity = 0
 
-    @resizeAvImages()
-
   resizeAvImages: ->
-
+    self = @
     @$el.find('img.av-image').each ->
-      ratio  = $(@).width() / $(@).height()
-      pratio = $(@).parent().width() / $(@).parent().height()
+      window.img = @ unless window.img?
+      self.resizeImage(@)
 
-      if (ratio < pratio)
-        css = width:'auto', height:'100%'
-      else
-        css = width:'100%', height:'auto'
-
-      $(@).parent().css(css)
+  resizeImage: (img) ->
+    if $(img).width() == 0
+      return setTimeout( (=> @resizeImage(img)) , 5)
+    ratio  = $(img).parent().width() / $(img).parent().height()
+    pratio = $(img).parent().parent().width() / $(img).parent().parent().height()
+    css = width:'100%', height:'auto'
+    css = width:'auto', height:'100%' if (ratio < pratio)
+    $(img).parent().css(css)
 
 
   setProgress: (current, total)->

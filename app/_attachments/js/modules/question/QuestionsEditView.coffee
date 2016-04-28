@@ -14,6 +14,7 @@ class QuestionsEditView extends Backbone.View
   closeViews: ->
     for view in @views
       view.close()
+    @views = []
 
   render: =>
 
