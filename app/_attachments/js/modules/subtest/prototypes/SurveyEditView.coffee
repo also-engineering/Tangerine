@@ -65,6 +65,25 @@ class SurveyEditView extends Backbone.View
 
   isValid: -> true
 
+
+  fileSize: (bytes, si = false) ->
+    threshold = if si? then 1000 else 1024
+
+    if Math.abs(bytes) < threshold
+      return bytes + ' B'
+
+    units = if si?
+      ['kB','MB','GB','TB','PB','EB','ZB','YB']
+    else
+      ['KiB','MiB','GiB','TiB','PiB','EiB','ZiB','YiB']
+    u = -1
+    while Math.abs(bytes) >= threshold && u < units.length - 1
+      bytes /= threshold
+      u++
+
+    "#{bytes.toFixed(1)}#{units[u]}"
+
+
   save: (options) ->
 
     options.questionSave = if options.questionSave? then options.questionSave else true
@@ -224,7 +243,7 @@ class SurveyEditView extends Backbone.View
   saveModel: ->
     @model.save null,
       success: =>
-        Utils.midAlert "Question saved"
+        Utils.midAlert "Image saved."
 
 
   updateFiles: (e) ->
@@ -323,13 +342,14 @@ class SurveyEditView extends Backbone.View
     else
       listHtml = @model.getArray('assets').map((el, i) ->
         "<tr>
-          <td><div class='av-image-container'><img class='asset-thumb' src='data:#{el.type};base64,#{el.imgData}'></div></td>
+          <td><div class='av-image-container'><img class='asset-thumb' src='data:#{el.type};base64,#{el.imgData}'></div>
+            #{@fileSize(el.imgData.length)}</td>
           <td><input class='asset-name' data-index='#{i}' value='#{_(el.name).escape()}'></td>
           <td><button class='command' style='position: relative; overflow: hidden; margin: 10px; '><input type='file' class='replace-asset'  data-index='#{i}' style='position: absolute;top: 0;right: 0;margin: 0;padding: 0;font-size: 20px;cursor: pointer;opacity: 0;filter: alpha(opacity=0);'>Replace</button></td>
           <td><button class='remove-asset command' data-index='#{i}'>Remove</button></td>
 
         </tr>"
-      ).join('')
+      , @).join('')
 
       listHtml = "
         <table id='asset-table'>
