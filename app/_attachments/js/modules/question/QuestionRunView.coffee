@@ -81,7 +81,11 @@ class QuestionRunView extends Backbone.View
   avButton: (e) ->
     time = (new Date).getTime() - @displayTime
     $target = $(e.target).parent('button')
-    unless @responseTime
+
+    untimed = @timeLimit is 0
+    notAnsweredAlready = not @responseTime
+
+    if notAnsweredAlready or untimed
       @responseTime = time
       @audio.play() if @audio?
       @answer = $target.attr('data-value')
@@ -368,7 +372,6 @@ class QuestionRunView extends Backbone.View
   resizeAvImages: ->
     self = @
     @$el.find('img.av-image').each ->
-      window.img = @ unless window.img?
       self.resizeImage(@)
 
   resizeImage: (img) ->
