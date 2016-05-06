@@ -4,13 +4,11 @@ AvEditView = Backbone.View.extend
 
   events:
     'change #auto-progress'      : 'updateAutoProgress'
-    'change #delay'              : 'updateDelay'
     'change #transition-comment' : 'updateTransitionComment'
     'change #time-limit'         : 'updateTimeLimit'
     'change #warning-time'    : 'updateWarningTime'
     'change #warning-message' : 'updateWarningMessage'
 
-    'change select#stimulus'  : 'updateStimulus'
     'change .asset-value'     : 'changeAssetMapValue'
     'click .remove-asset'     : 'removeAsset'
 
@@ -31,9 +29,6 @@ AvEditView = Backbone.View.extend
   initialize: (options) ->
     @model = options.model
     @subtest = options.subtest
-
-  updateDelay: ->
-    @model.set('delay', parseInt(@$el.find('#delay').val()))
 
   updateAutoProgress: ->
     @model.set('autoProgress', @$el.find("#auto-progress").is(":checked"))
@@ -72,7 +67,8 @@ AvEditView = Backbone.View.extend
     row = @getNumber e, 'data-row'
     layout = @model.layout()
     layout.rows[row].columns = [] unless layout.rows[row].columns?
-    layout.rows[row].columns.push({width:10,cell:{content:null, align:null}})
+    layout.rows[row].columns.push({width:10,content:null, align:null})
+    console.log layout
     @renderLayoutEditor()
 
 
@@ -130,31 +126,6 @@ AvEditView = Backbone.View.extend
     @model.layout layout
     @updateGridPreview()
 
-  renderStimulusEditor: ->
-    stimulus = @model.getNumber('stimulus', null)
-    assets = @model.getArray('assets')
-
-    optionsHtml = assets.map ( el, i ) ->
-      selected = 'selected' if stimulus is i
-      "<option value='#{i}' #{selected||''}>#{el.name}</option>"
-    if stimulus is null
-      optionsHtml = "<option selected disabled>Please select a stimulus</option>" + optionsHtml
-
-    noneSelected = "selected" if stimulus is "none"
-    optionsHtml += "<option value='none' #{noneSelected}>None</option>"
-
-    html = "
-      <select id='stimulus'>#{optionsHtml}</select>
-    "
-
-    @$el.find('#stimulus-container').html html
-
-  # when a new stimulus is selected
-  updateStimulus: (e) ->
-    stimulus = @getString(e)
-    @model.set "stimulus", stimulus
-
-
   changeAssetMapValue: (e) ->
     index = @getNumber e, 'data-index'
     value = @getString e
@@ -179,15 +150,10 @@ AvEditView = Backbone.View.extend
     assets.splice(index, 1)
     @model.set('assets', assets)
 
-    # if we deleted our stimulus, update stimulus too
-    if @model.getNumber('stimulus', null) is index
-      @model.set('stimulus', null)
-      @saveQuestion()
-      @renderStimulusEditor()
-    else
-      @saveQuestion()
+    @saveQuestion()
     # update screen
     @renderAssetManager()
+
 
   renderAssetManager: ->
 
@@ -289,8 +255,6 @@ AvEditView = Backbone.View.extend
   renderLayoutEditor: ->
     layout  = @model.layout()
 
-    stimulus = @model.getNumber('stimulus', null)
-
     @$el.find('#layout-editor').html "
       <h3>Grid editor</h3>
       <button class='command layout-add-row'>Add row</button>
@@ -316,7 +280,9 @@ AvEditView = Backbone.View.extend
 
       row.columns.forEach (cell, i) ->
         asset = assets[cell.content]
-
+        
+        unless asset?
+          return rowHtml += "No assets"
         if cell.content != null
           imgHtml = "<img class='preview-thumb' src='data:#{asset.type};base64,#{asset.imgData}'>"
         else
@@ -327,21 +293,36 @@ AvEditView = Backbone.View.extend
         else
           textAlign = ''
 
-        rowHtml += "<div style='margin:0; position:relative; z-index: 999; display: inline-block; border:solid red 1px; height:#{480*(row.height/100)}px;width:#{640*(cell.width/100)}px; overflow:hidden; #{textAlign}'> <span class='dimension-overylay width-overlay'>Width #{cell.width}% <br> #{asset?.name || ''}<br>#{assetMap[cell.content]||''}</span> #{imgHtml}</div>"
+        rowHtml += "<div style='margin:0; position:relative; z-index: 999; display: inline-block; box-sizing: border-box; border:solid red 1px; height:#{480*(row.height/100)}px;width:#{640*(cell.width/100)}px; overflow:hidden; #{textAlign}'> <span class='dimension-overylay width-overlay'>Width #{cell.width}% <br> #{asset?.name || ''}<br>#{assetMap[cell.content]||''}</span> #{imgHtml}</div>"
       previewGridHtml += "<div style='border: 1px green solid; display:block; overflow:hidden; height:#{480*(row.height/100)}px'><span class='dimension-overylay' style='z-index:9999;'>Row Height #{row.height}%</span>#{rowHtml}</div>"
     return previewGridHtml
 
   updateGridPreview: ->
 
     @$el.find("#grid-preview").html @htmlGridPreview()
-    @$el.find('img.preview-thumb').each ->
-      $(@).on 'load', ->
-        ratio  = $(@).width() / $(@).height()
-        pratio = $(@).parent().parent().width() / $(@).parent().parent().height()
+    @resizeAvImages()
+    #@$el.find('img.preview-thumb').each ->
+    #  $(@).on 'load', ->
+    #    ratio  = $(@).width() / $(@).height()
+    #    pratio = $(@).parent.width() / $(@).parent().height()
+#
+#        css = width:'100%', height:'auto'
+#        css = width:'auto', height:'100%' if (ratio < pratio)
+#        $(@).css(css)
 
-        css = width:'100%', height:'auto'
-        css = width:'auto', height:'100%' if (ratio < pratio)
-        $(@).css(css)
+  resizeAvImages: ->
+    self = @
+    @$el.find('img.preview-thumb').each ->
+      self.resizeImage(@)
+
+  resizeImage: (img) ->
+    if $(img).width() == 0
+      return setTimeout( (=> @resizeImage(img)) , 5)
+    ratio  = $(img).width() / $(img).height()
+    pratio = $(img).parent().width() / $(img).parent().height()
+    css = width:'100%', height:'auto'
+    css = width:'auto', height:'100%' if (ratio < pratio)
+    $(img).css(css)
 
   uploadDisplaySound: (e) ->
     files = e.target.files
@@ -351,6 +332,7 @@ AvEditView = Backbone.View.extend
       reader = new FileReader()
 
       reader.onload = (readerEvt) =>
+
         sound64 = btoa(readerEvt.target.result)
 
         @model.save
@@ -385,8 +367,6 @@ AvEditView = Backbone.View.extend
 
   render: ->
 
-    delay = @model.getNumber('delay')
-
     transitionComment = @model.getEscapedString('transitionComment')
 
     autoProgress = @model.getBoolean('autoProgress')
@@ -396,17 +376,11 @@ AvEditView = Backbone.View.extend
     warningMessage = @model.getEscapedString('warningMessage')
 
     @$el.html "
-      <h3>AV Editor</h3>
-
         <div class='label_value'>
           <label for='display-sound' title='Sound to be played when the question is displayed.'>Display sound</label>
           <div id='display-sound-container'></div>
         </div>
         <table>
-          <tr>
-            <td><label for='delay'>Delay</label></td>
-            <td><input id='delay' type='number' value=#{delay}></td>
-          </tr>
           <tr>
             <td><label for='time-limit' title='The amount of time (in ms) that the participant will be given before the task moves to the next screen automatically. 0 means disabled.'>Time limit</label></td>
             <td><input id='time-limit' type='number' value='#{timeLimit}'></td>
@@ -428,16 +402,11 @@ AvEditView = Backbone.View.extend
             <td><input id='transition-comment' type='text' value='#{transitionComment}'></td>
           </tr>
           <tr><td></td></tr>
-          <tr>
-            <td><label for='stimulus'>Stimulus</label></td>
-            <td><div id='stimulus-container'></div></td>
-          </tr>
         </table>
       <div id='asset-manager'></div>
       <div id='layout-editor'></div>
     "
 
-    @renderStimulusEditor()
     @renderAssetManager()
     @renderLayoutEditor()
     @renderDisplaySound()
