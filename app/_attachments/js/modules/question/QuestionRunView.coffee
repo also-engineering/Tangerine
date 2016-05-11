@@ -107,11 +107,12 @@ class QuestionRunView extends Backbone.View
       $target.addClass('av-button-highlight')
       @highlightPrevious()
 
-    @model.getString('transitionComment')
+    # do not display warning after a click
+    clearTimeout(@warningTimerId) if @warningTimerId?
+
     if @isValid
       if @autoProgress
         clearTimeout(@progressTimerId) if @progressTimerId?
-        clearTimeout(@warningTimerId) if @warningTimerId?
         if @autoProgressImmediate
           @trigger 'av-next'
         else
@@ -390,7 +391,8 @@ class QuestionRunView extends Backbone.View
 
     @$el.find("#container-#{@name}").html html
     if (@autoProgress or @timeLimit) and not @keepControls
-      @$el.find('.av-controls')[0].style.opacity = 0
+      @$el.find('.av-controls-prev')[0].style.opacity = 0
+      @$el.find('.av-controls-next')[0].style.opacity = 0
 
   resizeAvImages: ->
     self = @
