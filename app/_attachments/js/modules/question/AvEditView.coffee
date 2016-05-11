@@ -4,17 +4,20 @@ AvEditView = Backbone.View.extend
 
   events:
     'change #auto-progress'      : 'updateAutoProgress'
+    'change #auto-progress-immediate'      : 'updateAutoProgressImmediate'
+    'change #keep-controls'      : 'updateKeepControls'
+
     'change #transition-comment' : 'updateTransitionComment'
     'change #time-limit'         : 'updateTimeLimit'
-    'change #warning-time'    : 'updateWarningTime'
-    'change #warning-message' : 'updateWarningMessage'
+    'change #warning-time'       : 'updateWarningTime'
+    'change #warning-message'    : 'updateWarningMessage'
+    'change #highlight-previous' : 'updateHighlightPrevious'
 
     'change .asset-value'     : 'changeAssetMapValue'
     'click .remove-asset'     : 'removeAsset'
 
     'change #display-sound'        : 'uploadDisplaySound'
     'click #remove-display-sound' : 'removeDisplaySound'
-
 
     'click button.layout-add-row'       : 'addRow'
     'click button.layout-remove-row'    : 'removeRow'
@@ -26,12 +29,23 @@ AvEditView = Backbone.View.extend
     'change input.layout-column-width'  : 'updateColumnWidth'
     'change input.layout-row-height'    : 'updateRowHeight'
 
+
+
   initialize: (options) ->
     @model = options.model
     @subtest = options.subtest
 
+  updateHighlightPrevious: ->
+    @model.set('highlightPrevious', @$el.find('#highlight-previous').val() || '')
+
   updateAutoProgress: ->
     @model.set('autoProgress', @$el.find("#auto-progress").is(":checked"))
+
+  updateKeepControls: ->
+    @model.set('keepControls', @$el.find("#keep-controls").is(":checked"))
+
+  updateAutoProgressImmediate: ->
+    @model.set('autoProgress', @$el.find("#auto-progress-immediate").is(":checked"))
 
   updateTransitionComment: ->
     @model.set('transitionComment', @$el.find('#transition-comment').val())
@@ -279,21 +293,19 @@ AvEditView = Backbone.View.extend
       rowHtml = ''
 
       row.columns.forEach (cell, i) ->
-        asset = assets[cell.content]
-        
-        unless asset?
-          return rowHtml += "No assets"
+        asset = assets[cell.content] || {}
+
         if cell.content != null
           imgHtml = "<img class='preview-thumb' src='data:#{asset.type};base64,#{asset.imgData}'>"
         else
-          imgHtml = "<br>no image"
+          imgHtml = "<br>No image<img src='' class='preview-thumb'>"
 
         if cell.align != null
           textAlign = "text-align: #{Question.AV_ALIGNMENT[cell.align]}"
         else
           textAlign = ''
 
-        rowHtml += "<div style='margin:0; position:relative; z-index: 999; display: inline-block; box-sizing: border-box; border:solid red 1px; height:#{480*(row.height/100)}px;width:#{640*(cell.width/100)}px; overflow:hidden; #{textAlign}'> <span class='dimension-overylay width-overlay'>Width #{cell.width}% <br> #{asset?.name || ''}<br>#{assetMap[cell.content]||''}</span> #{imgHtml}</div>"
+        rowHtml += "<div style='margin:0; position:relative; z-index: 999; display: inline-block; box-sizing: border-box; border:solid red 1px; height:#{480*(row.height/100)}px;width:#{640*(cell.width/100)}px; overflow:hidden; #{textAlign}'> <span class='dimension-overylay width-overlay'>Width #{cell.width}% <br> #{asset.name || ''}<br>#{assetMap[cell.content]||''}</span> #{imgHtml}</div>"
       previewGridHtml += "<div style='border: 1px green solid; display:block; overflow:hidden; height:#{480*(row.height/100)}px'><span class='dimension-overylay' style='z-index:9999;'>Row Height #{row.height}%</span>#{rowHtml}</div>"
     return previewGridHtml
 
@@ -369,11 +381,16 @@ AvEditView = Backbone.View.extend
 
     transitionComment = @model.getEscapedString('transitionComment')
 
-    autoProgress = @model.getBoolean('autoProgress')
+    autoProgress          = @model.getBoolean('autoProgress')
+    autoProgressImmediate = @model.getBoolean('autoProgressImmediate')
+    keepControls          = @model.getBoolean('keepControls')
 
     timeLimit      = @model.getNumber('timeLimit')
     warningTime    = @model.getNumber('warningTime')
     warningMessage = @model.getEscapedString('warningMessage')
+
+    highlightPrevious = @model.getEscapedString('highlightPrevious')
+
 
     @$el.html "
         <div class='label_value'>
@@ -398,9 +415,23 @@ AvEditView = Backbone.View.extend
             <td><input id='auto-progress' type='checkbox' #{'checked' if autoProgress}></td>
           </tr>
           <tr>
+            <td><label for='auto-progress-immediate' title='Automatically progress immediately without a delay.'>Auto progress immediately</label></td>
+            <td><input id='auto-progress-immediate' type='checkbox' #{'checked' if autoProgressImmediate}></td>
+          </tr>
+          <tr>
+            <td><label for='keep-controls' title='Override setting to display next button.'>Keep controls</label></td>
+            <td><input id='keep-controls' type='checkbox' #{'checked' if keepControls}></td>
+          </tr>
+
+          <tr>
             <td><label for='transition-comment' title='Message shown when there is a valid answer.'>Transition comment</label></td>
             <td><input id='transition-comment' type='text' value='#{transitionComment}'></td>
           </tr>
+          <tr>
+            <td><label for='highlight-previous' title='Highlight the asset with the same value as this variable.'>Highlight previous</label></td>
+            <td><input id='highlight-previous' type='text' value='#{highlightPrevious}'></td>
+          </tr>
+
           <tr><td></td></tr>
         </table>
       <div id='asset-manager'></div>

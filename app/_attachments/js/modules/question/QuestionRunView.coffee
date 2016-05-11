@@ -41,6 +41,15 @@ class QuestionRunView extends Backbone.View
     @startProgressTimer() if @timeLimit isnt 0
     @startWarningTimer()  if @warningTime isnt 0
     @playDisplaySound()
+    @highlightPrevious()
+
+
+  highlightPrevious: ->
+    # highlight previous answer if "highlight previous" option selected
+    if @model.getString('highlightPrevious') isnt ''
+      previousValue = ResultOfQuestion(@model.get('highlightPrevious'))
+      @$el.find(".av-button[data-value='#{previousValue}']").addClass('av-button-highlight')
+
 
 
   stopTimers: ->
@@ -83,20 +92,31 @@ class QuestionRunView extends Backbone.View
     $target = $(e.target).parent('button')
 
     untimed = @timeLimit is 0
-    notAnsweredAlready = not @responseTime
+    notAnsweredAlready =
+      if @answerQuantity?
+        not @responseTime or @answer.length < @answerQuantity
+      else
+        not @responseTime or @answer is ''
 
     if notAnsweredAlready or untimed
       @responseTime = time
       @audio.play() if @audio?
       @answer = $target.attr('data-value')
       @updateValidity()
+      @$el.find('button.av-button-highlight').removeClass('av-button-highlight')
+      $target.addClass('av-button-highlight')
+      @highlightPrevious()
 
     @model.getString('transitionComment')
     if @isValid
       if @autoProgress
         clearTimeout(@progressTimerId) if @progressTimerId?
         clearTimeout(@warningTimerId) if @warningTimerId?
-        @trigger 'av-next'
+        if @autoProgressImmediate
+          @trigger 'av-next'
+        else
+          setTimeout (=> @trigger 'av-next'), QuestionRunView.AUTO_PROGRESS_DELAY
+
 
       if @model.getString('transitionComment') isnt ''
         @setMessage(@model.getEscapedString('transitionComment'))
@@ -177,6 +197,9 @@ class QuestionRunView extends Backbone.View
     @warningTime    = @model.getNumber('warningTime', 0)
     @warningMessage = @model.getEscapedString('warningMessage')
     @autoProgress  = @model.getBoolean('autoProgress')
+
+    @keepControls = @model.getBoolean('keepControls', false)
+
     @exitTimerId   = null
     @exitCount = 0
 
@@ -366,7 +389,7 @@ class QuestionRunView extends Backbone.View
     "
 
     @$el.find("#container-#{@name}").html html
-    if @autoProgress or @timeLimit
+    if (@autoProgress or @timeLimit) and not @keepControls
       @$el.find('.av-controls')[0].style.opacity = 0
 
   resizeAvImages: ->

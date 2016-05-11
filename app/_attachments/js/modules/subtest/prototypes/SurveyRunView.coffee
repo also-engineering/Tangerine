@@ -191,8 +191,18 @@ class SurveyRunView extends Backbone.View
         @questions.sort()
         if @questions.first().get("type") is "av"
           @avMode = true
+          $(window).on 'resize', @handleResize
         @ready = true
         @render()
+
+  handleResize: =>
+    @questionViews.forEach (qv)-> qv.render()
+
+    qv = @questionViews[@currentQuestion]
+    @updateQuestionProgress()
+    qv.$el.find('.av-question').css 'display': 'block'
+    qv.resizeAvImages()
+    qv.highlightPrevious()
 
   # when a question is answered
   onQuestionAnswer: (element) =>

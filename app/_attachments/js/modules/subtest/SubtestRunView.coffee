@@ -169,6 +169,8 @@ class SubtestRunView extends Backbone.View
     else
       throw "Prototype skipping not implemented"
 
-  next: -> @trigger "next"
+  next: ->
+    $(window).off('resize')
+    @trigger "next"
   back: -> @trigger "back"
   skip: -> @parent.skip()
