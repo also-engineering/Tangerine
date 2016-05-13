@@ -3,9 +3,10 @@ AvEditView = Backbone.View.extend
   className: 'av-edit-view'
 
   events:
-    'change #auto-progress'      : 'updateAutoProgress'
-    'change #auto-progress-immediate'      : 'updateAutoProgressImmediate'
-    'change #keep-controls'      : 'updateKeepControls'
+    'change #auto-progress'           : 'updateAutoProgress'
+    'change #auto-progress-immediate' : 'updateAutoProgressImmediate'
+    'change #keep-controls'           : 'updateKeepControls'
+    'change #correctable'             : 'updateCorrectable'
 
     'change #transition-comment' : 'updateTransitionComment'
     'change #time-limit'         : 'updateTimeLimit'
@@ -43,6 +44,9 @@ AvEditView = Backbone.View.extend
 
   updateKeepControls: ->
     @model.set('keepControls', @$el.find("#keep-controls").is(":checked"))
+
+  updateCorrectable: ->
+    @model.set('correctable', @$el.find("#correctable").is(":checked"))
 
   updateAutoProgressImmediate: ->
     @model.set('autoProgress', @$el.find("#auto-progress-immediate").is(":checked"))
@@ -384,6 +388,7 @@ AvEditView = Backbone.View.extend
     autoProgress          = @model.getBoolean('autoProgress')
     autoProgressImmediate = @model.getBoolean('autoProgressImmediate')
     keepControls          = @model.getBoolean('keepControls')
+    correctable           = @model.getBoolean('correctable')
 
     timeLimit      = @model.getNumber('timeLimit')
     warningTime    = @model.getNumber('warningTime')
@@ -422,7 +427,10 @@ AvEditView = Backbone.View.extend
             <td><label for='keep-controls' title='Override setting to display next button.'>Keep controls</label></td>
             <td><input id='keep-controls' type='checkbox' #{'checked' if keepControls}></td>
           </tr>
-
+          <tr>
+            <td><label for='correctable' title='Allow users to correct their answers.'>Correctable</label></td>
+            <td><input id='correctable' type='checkbox' #{'checked' if correctable}></td>
+          </tr>
           <tr>
             <td><label for='transition-comment' title='Message shown when there is a valid answer.'>Transition comment</label></td>
             <td><input id='transition-comment' type='text' value='#{transitionComment}'></td>

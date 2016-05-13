@@ -15,9 +15,9 @@ class QuestionRunView extends Backbone.View
     # reset the timer every time the button is pressed
     if @exitTimerId?
       clearTimeout @exitTimerId
-      @exitTimerId = setTimeout @cancelExit.bind(this), QuestionRunView.EXIT_TIMER
+      @exitTimerId = setTimeout @cancelExit.bind(@), QuestionRunView.EXIT_TIMER
     else
-      @exitTimerId = setTimeout @cancelExit.bind(this), QuestionRunView.EXIT_TIMER
+      @exitTimerId = setTimeout @cancelExit.bind(@), QuestionRunView.EXIT_TIMER
 
     @exitCount++
     if @exitCount > 4
@@ -29,7 +29,6 @@ class QuestionRunView extends Backbone.View
   cancelExit: ->
     @exitCount = 0
     @exitTimerId = null
-
 
 
   startAv: ->
@@ -49,7 +48,6 @@ class QuestionRunView extends Backbone.View
     if @model.getString('highlightPrevious') isnt ''
       previousValue = ResultOfQuestion(@model.get('highlightPrevious'))
       @$el.find(".av-button[data-value='#{previousValue}']").addClass('av-button-highlight')
-
 
 
   stopTimers: ->
@@ -91,14 +89,9 @@ class QuestionRunView extends Backbone.View
     time = (new Date).getTime() - @displayTime
     $target = $(e.target).parent('button')
 
-    untimed = @timeLimit is 0
-    notAnsweredAlready =
-      if @answerQuantity?
-        not @responseTime or @answer.length < @answerQuantity
-      else
-        not @responseTime or @answer is ''
+    notAnsweredAlready = not @responseTime?
 
-    if notAnsweredAlready or untimed
+    if notAnsweredAlready or @correctable
       @responseTime = time
       @audio.play() if @audio?
       @answer = $target.attr('data-value')
@@ -200,6 +193,8 @@ class QuestionRunView extends Backbone.View
     @autoProgress  = @model.getBoolean('autoProgress')
 
     @keepControls = @model.getBoolean('keepControls', false)
+
+    @correctable = @model.getBoolean('correctable', false)
 
     @exitTimerId   = null
     @exitCount = 0
