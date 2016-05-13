@@ -2924,10 +2924,6 @@ button.ui-button::-moz-focus-inner {
   background: none;
   border: none;
 }
-.av-button:not(:active) {
-  transition: border 500ms step-end;
-}
-.av-button:active,
 .av-button-highlight {
   border: 10px solid #af0;
   border-radius: 10px;
