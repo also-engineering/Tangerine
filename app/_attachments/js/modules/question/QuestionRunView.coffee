@@ -93,6 +93,8 @@ class QuestionRunView extends Backbone.View
   avButton: (e) ->
     time = (new Date).getTime() - @displayTime
     $target = $(e.target).parent('button')
+    value = $target.attr('data-value')
+    return if value is '' # dont respond if there's no value
 
     notAnsweredAlready = not @responseTime?
 
