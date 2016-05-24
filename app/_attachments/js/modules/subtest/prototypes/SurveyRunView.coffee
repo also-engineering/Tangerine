@@ -182,6 +182,12 @@ class SurveyRunView extends Backbone.View
 
     @i18n()
 
+    # used by av questions
+    @inputAudio = @model.getObject('inputAudio', false)
+    if @inputAudio
+      @audio = new Audio("data:#{@inputAudio.type};base64,#{@inputAudio.data}")
+
+
     @questions     = new Questions()
     # @questions.db.view = "questionsBySubtestId" Bring this back when prototypes make sense again
     @questions.fetch
