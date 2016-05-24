@@ -97,11 +97,10 @@ class QuestionRunView extends Backbone.View
     return if value is '' # dont respond if there's no value
 
     notAnsweredAlready = not @responseTime?
-
     if notAnsweredAlready or @correctable
       @responseTime = time
-      @audio.play() if @audio?
-      @answer = $target.attr('data-value')
+      @parent.audio.play() if @parent.audio?
+      @answer = value
       @updateValidity()
       @$el.find('button.av-button-highlight').removeClass('av-button-highlight')
       $target.addClass('av-button-highlight')
@@ -118,14 +117,12 @@ class QuestionRunView extends Backbone.View
         else
           setTimeout (=> @trigger 'av-next'), QuestionRunView.AUTO_PROGRESS_DELAY
 
-
       if @model.getString('transitionComment') isnt ''
         @setMessage(@model.getEscapedString('transitionComment'))
+
     else
-      if @model.getString('transitionComment') isnt ''
-        @setMessage(@model.getEscapedString('transitionComment'))
-
-      return @setMessage(@model.getEscapedString("customValidationMessage"))
+      @setMessage(@model.getEscapedString("customValidationMessage"))
+      return # do not trigger the answer event
 
     @trigger "answer", e, @model.get('order')
 
@@ -151,10 +148,6 @@ class QuestionRunView extends Backbone.View
     @displaySound = @model.getObject('displaySound', false)
     if @displaySound
       @displaySoundObj = new Audio("data:#{@displaySound.type};base64,#{@displaySound.data}")
-
-    @inputAudio = @parent.model.getObject('inputAudio', false)
-    if @inputAudio
-      @audio = new Audio("data:#{@inputAudio.type};base64,#{@inputAudio.data}")
 
     @dataEntry = options.dataEntry
     @fontFamily = @parent.model.get('fontFamily')
@@ -198,6 +191,7 @@ class QuestionRunView extends Backbone.View
     @warningTime    = @model.getNumber('warningTime', 0)
     @warningMessage = @model.getEscapedString('warningMessage')
     @autoProgress  = @model.getBoolean('autoProgress')
+    @autoProgressImmediate = @model.getBoolean('autoProgressImmediate')
 
     @keepControls = @model.getBoolean('keepControls', false)
 
@@ -424,8 +418,12 @@ class QuestionRunView extends Backbone.View
         @[element+"Result"][@options[i].value] = element for option, i in @options
     return
 
+
 Object.defineProperty QuestionRunView, "TIMER_INTERVAL",
   value: 20, # 20 milliseconds
+
+Object.defineProperty QuestionRunView, "AUTO_PROGRESS_DELAY",
+  value: 350, #350 milliseconds
 
 
 Object.defineProperty QuestionRunView, "EXIT_TIMER",
