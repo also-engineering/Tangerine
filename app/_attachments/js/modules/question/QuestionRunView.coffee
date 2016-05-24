@@ -40,8 +40,13 @@ class QuestionRunView extends Backbone.View
     @startProgressTimer() if @timeLimit isnt 0
     @startWarningTimer()  if @warningTime isnt 0
     @playDisplaySound()
+    @flashScreen()
     @highlightPrevious()
 
+  flashScreen: ->
+    $modal = $('#modal')
+    $modal.css('display', 'block')
+    setTimeout(( -> $modal.css('display', 'none')), 100 )
 
   highlightPrevious: ->
     # highlight previous answer if "highlight previous" option selected
