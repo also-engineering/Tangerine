@@ -2997,3 +2997,13 @@ button.ui-button::-moz-focus-inner {
   left: 0;
   margin-left: 0;
 }
+#modal {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: none;
+  background: white;
+  z-index: 5000;
+}
