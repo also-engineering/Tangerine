@@ -49,7 +49,7 @@ AvEditView = Backbone.View.extend
     @model.set('correctable', @$el.find("#correctable").is(":checked"))
 
   updateAutoProgressImmediate: ->
-    @model.set('autoProgress', @$el.find("#auto-progress-immediate").is(":checked"))
+    @model.set('autoProgressImmediate', @$el.find("#auto-progress-immediate").is(":checked"))
 
   updateTransitionComment: ->
     @model.set('transitionComment', @$el.find('#transition-comment').val())

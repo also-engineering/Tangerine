@@ -44,9 +44,10 @@ class QuestionRunView extends Backbone.View
     @highlightPrevious()
 
   flashScreen: ->
+    window.requestAnimationFrame =>
     $modal = $('#modal')
     $modal.css('display', 'block')
-    setTimeout(( -> $modal.css('display', 'none')), 100 )
+      setTimeout(( window.requestAnimationFrame => $modal.css('display', 'none') ), @flashInterval )
 
   highlightPrevious: ->
     # highlight previous answer if "highlight previous" option selected
@@ -56,13 +57,19 @@ class QuestionRunView extends Backbone.View
 
 
   stopTimers: ->
-    clearTimeout(@warningTimerId)  if @warningTimerId?
-    clearTimeout(@progressTimerId) if @progressTimerId?
+    if @warningTimerId?
+      @cancelWarningTimer = true
+      clearTimeout(@warningTimerId)
+    if @progressTimerId?
+      @cancelProgressTimer = true
+      clearTimeout(@progressTimerId)
 
   startWarningTimer: ->
     @warningTimerId = setTimeout(@checkWarningTimer.bind(@), QuestionRunView.TIMER_INTERVAL)
 
   checkWarningTimer: ->
+    return if @cancelWarningTimer is true
+
     elapsed = (new Date).getTime() - @displayTime
     if elapsed >= @warningTime
       @setMessage @model.get('warningMessage')
@@ -73,6 +80,8 @@ class QuestionRunView extends Backbone.View
     @progressTimerId = setTimeout(@checkProgressTimer.bind(@), QuestionRunView.TIMER_INTERVAL)
 
   checkProgressTimer: ->
+    return if @cancelProgressTimer is true
+
     elapsed = (new Date).getTime() - @displayTime
     if elapsed >= @timeLimit
       @forceProgress(elapsed)
@@ -80,8 +89,8 @@ class QuestionRunView extends Backbone.View
       @progressTimerId = setTimeout(@checkProgressTimer.bind(@), QuestionRunView.TIMER_INTERVAL)
 
   forceProgress: (elapsed) ->
-    clearTimeout(@progressTimerId) if @progressTimerId?
-    clearTimeout(@warningTimerId) if @warningTimerId?
+    @cancelProgressTimer = @progressTimerId?
+    @cancelWarningTimer = @warningTimerId?
 
     @forcedTime = elapsed
     @isValid = true
@@ -107,11 +116,11 @@ class QuestionRunView extends Backbone.View
       @highlightPrevious()
 
     # do not display warning after a click
-    clearTimeout(@warningTimerId) if @warningTimerId?
+    @cancelWarningTimer = @warningTimerId?
 
     if @isValid
       if @autoProgress
-        clearTimeout(@progressTimerId) if @progressTimerId?
+        @cancelProgressTimer = @progressTimerId?
         if @autoProgressImmediate
           @trigger 'av-next'
         else
@@ -192,6 +201,8 @@ class QuestionRunView extends Backbone.View
     @warningMessage = @model.getEscapedString('warningMessage')
     @autoProgress  = @model.getBoolean('autoProgress')
     @autoProgressImmediate = @model.getBoolean('autoProgressImmediate')
+
+    @flashInterval = @model.getNumber('flashInterval', QuestionRunView.FLASH_INTERVAL)
 
     @keepControls = @model.getBoolean('keepControls', false)
 
@@ -396,8 +407,12 @@ class QuestionRunView extends Backbone.View
       self.resizeImage(@)
 
   resizeImage: (img) ->
+
+    # retry if no image width yet
     if $(img).width() == 0
       return setTimeout( (=> @resizeImage(img)) , 5)
+
+    # resize to fit based on largest dimension
     ratio  = $(img).parent().width() / $(img).parent().height()
     pratio = $(img).parent().parent().width() / $(img).parent().parent().height()
     css = width:'100%', height:'auto'
@@ -419,12 +434,15 @@ class QuestionRunView extends Backbone.View
     return
 
 
+# constants
 Object.defineProperty QuestionRunView, "TIMER_INTERVAL",
   value: 20, # 20 milliseconds
 
-Object.defineProperty QuestionRunView, "AUTO_PROGRESS_DELAY",
-  value: 350, #350 milliseconds
-
-
 Object.defineProperty QuestionRunView, "EXIT_TIMER",
   value: 5e3 # 5 seconds
+
+Object.defineProperty QuestionRunView, "AUTO_PROGRESS_DELAY",
+  value: 350
+
+Object.defineProperty QuestionRunView, "FLASH_INTERVAL",
+  value: 100
