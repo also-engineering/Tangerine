@@ -9,6 +9,8 @@ AvEditView = Backbone.View.extend
     'change #correctable'             : 'updateCorrectable'
 
     'change #transition-comment' : 'updateTransitionComment'
+    'change #transition-delay'   : 'updateTransitionDelay'
+
     'change #time-limit'         : 'updateTimeLimit'
     'change #warning-time'       : 'updateWarningTime'
     'change #warning-message'    : 'updateWarningMessage'
@@ -54,6 +56,9 @@ AvEditView = Backbone.View.extend
   updateTransitionComment: ->
     @model.set('transitionComment', @$el.find('#transition-comment').val())
 
+  updateTransitionDelay: ->
+    @model.set('transitionDelay', @getNumber('#transition-delay'))
+
   updateTimeLimit: ->
     @model.set('timeLimit', @getNumber('#time-limit'))
 
@@ -86,7 +91,6 @@ AvEditView = Backbone.View.extend
     layout = @model.layout()
     layout.rows[row].columns = [] unless layout.rows[row].columns?
     layout.rows[row].columns.push({width:10,content:null, align:null})
-    console.log layout
     @renderLayoutEditor()
 
 
@@ -384,6 +388,7 @@ AvEditView = Backbone.View.extend
   render: ->
 
     transitionComment = @model.getEscapedString('transitionComment')
+    transitionDelay = @model.getNumber('transitionDelay', 350)
 
     autoProgress          = @model.getBoolean('autoProgress')
     autoProgressImmediate = @model.getBoolean('autoProgressImmediate')
@@ -434,6 +439,10 @@ AvEditView = Backbone.View.extend
           <tr>
             <td><label for='transition-comment' title='Message shown when there is a valid answer.'>Transition comment</label></td>
             <td><input id='transition-comment' type='text' value='#{transitionComment}'></td>
+          </tr>
+          <tr>
+            <td><label for='transition-delay' title='Time in milliseconds to wait before progressing to the next screen after a valid answer. Default is 350. If Auto Progress Immediately is selected, it will override this setting.'>Transition delay</label></td>
+            <td><input id='transition-delay' type='text' value='#{transitionDelay}'></td>
           </tr>
           <tr>
             <td><label for='highlight-previous' title='Highlight the asset with the same value as this variable.'>Highlight previous</label></td>
