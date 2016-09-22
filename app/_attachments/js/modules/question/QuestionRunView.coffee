@@ -45,9 +45,10 @@ class QuestionRunView extends Backbone.View
 
   flashScreen: ->
     window.requestAnimationFrame =>
-    $modal = $('#modal')
-    $modal.css('display', 'block')
-      setTimeout(( window.requestAnimationFrame => $modal.css('display', 'none') ), @flashInterval )
+      $modal = $('#modal')
+      $modal.css('display', 'block')
+      setTimeout (window.requestAnimationFrame => $modal.css('display', 'none') )
+      , @flashInterval
 
   highlightPrevious: ->
     # highlight previous answer if "highlight previous" option selected
