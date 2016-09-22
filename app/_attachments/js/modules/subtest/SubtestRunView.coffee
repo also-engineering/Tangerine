@@ -50,7 +50,7 @@ class SubtestRunView extends Backbone.View
         <h2>#{@model.get 'name'}</h2>
         #{enumeratorHelp}
         #{studentDialog}
-        <div id='prototype_wrapper'></div>
+        <div id='prototype_wrapper' class='unselectable'></div>
 
         <div class='controlls clearfix'>
           #{transitionComment}
