@@ -101,7 +101,11 @@ class QuestionRunView extends Backbone.View
 
   avButton: (e) ->
     time = (new Date).getTime() - @displayTime
-    $target = $(e.target).parent('button')
+    if e.target.nodeName == "IMG"
+      $target = $(e.target).parent('button')
+    else if e.target.nodeName == "BUTTON"
+      return
+      $target = $(e.target)
     value = $target.attr('data-value')
     return if value is '' # dont respond if there's no value
 
