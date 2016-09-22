@@ -129,7 +129,10 @@ class QuestionRunView extends Backbone.View
         if @autoProgressImmediate
           @trigger 'av-next'
         else
-          setTimeout (=> @trigger 'av-next'), QuestionRunView.AUTO_PROGRESS_DELAY
+          delayTime = QuestionRunView.AUTO_PROGRESS_DELAY
+          if @model.getNumber('transitionDelay', delayTime) isnt QuestionRunView.AUTO_PROGRESS_DELAY
+            delayTime = @model.getNumber('transitionDelay')
+          setTimeout (=> @trigger 'av-next'), delayTime
 
       if @model.getString('transitionComment') isnt ''
         @setMessage(@model.getEscapedString('transitionComment'))
