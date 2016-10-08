@@ -57,6 +57,12 @@ class QuestionRunView extends Backbone.View
       @$el.find(".av-button[data-value='#{previousValue}']").addClass('av-button-highlight')
 
 
+  highlightCurrent: ->
+    # highlight current answer
+    if @answer isnt ''
+      @$el.find(".av-button[data-value='#{@answer}']").addClass('av-button-highlight')
+
+
   stopTimers: ->
     if @warningTimerId?
       @cancelWarningTimer = true
