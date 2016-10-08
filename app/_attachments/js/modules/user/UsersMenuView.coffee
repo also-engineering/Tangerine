@@ -4,7 +4,7 @@ class UsersMenuView extends Backbone.View
 
   events:
     "click .admin" : "selectAdmin"
-    "click .reader" : "selectReader"
+    "click .member" : "selectReader"
     "click #add-admin"     : "addAdmin"
     "click #remove-admin"  : "removeAdmin"
     "click #add-member"    : "addMember"
