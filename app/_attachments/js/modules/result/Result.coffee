@@ -55,6 +55,19 @@ class Result extends Backbone.Model
               return value
     return null
 
+  setVariable: ( key, newValue ) ->
+    for subtest in @get("subtestData")
+      data = subtest.data
+      if data.labels?
+        for label, i in data.labels
+          if label is key
+            data.location[i] = newValue
+      else
+        for variable, value of data
+          if variable == key
+            data[variable] = newValue
+    return null
+
   getByHash: ( hash ) ->
     for subtest in @get("subtestData")
       if hash is subtest.subtestHash
